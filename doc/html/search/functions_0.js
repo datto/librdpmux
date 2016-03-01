@@ -1,0 +1,21 @@
+var searchData=
+[
+  ['shim_5fconnect',['shim_connect',['../nanomsg_8c.html#a593e2f1004967bd9579626706a4a194c',1,'nanomsg.c']]],
+  ['shim_5fdisplay_5fbuffer_5fupdate_5floop',['shim_display_buffer_update_loop',['../shim_8c.html#ad2d5acae095242a3b431558a872b1017',1,'shim.c']]],
+  ['shim_5fdisplay_5frefresh',['shim_display_refresh',['../shim_8c.html#a178f928d9551cd134012ad32d21976a6',1,'shim.c']]],
+  ['shim_5fdisplay_5fswitch',['shim_display_switch',['../shim_8c.html#ad300e030d42d8d266d761cdaec47f832',1,'shim.c']]],
+  ['shim_5fdisplay_5fupdate',['shim_display_update',['../shim_8c.html#aa13fef43632c4a7c7f2118c6c893b335',1,'shim.c']]],
+  ['shim_5fget_5fsocket_5fpath',['shim_get_socket_path',['../dbus_8c.html#ae0abe3e1c326ae64034b5b2660c4358d',1,'dbus.c']]],
+  ['shim_5finit_5fdisplay_5fstruct',['shim_init_display_struct',['../shim_8c.html#a9c6674cfc4d057c29da621992888b6ae',1,'shim.c']]],
+  ['shim_5fmainloop',['shim_mainloop',['../shim_8c.html#ab198b5d9a5378234fdc3aa55dbccc37f',1,'shim.c']]],
+  ['shim_5fnn_5frecv_5fmsg',['shim_nn_recv_msg',['../nanomsg_8c.html#a895bd8fd7f6e970d26b8f8817863ae8b',1,'nanomsg.c']]],
+  ['shim_5fnn_5fsend_5fmsg',['shim_nn_send_msg',['../nanomsg_8c.html#a258144d13768f139814ff3f1535578ab',1,'nanomsg.c']]],
+  ['shim_5fout_5floop',['shim_out_loop',['../shim_8c.html#abe21d95e2d23dd8d791e940decaed431',1,'shim.c']]],
+  ['shim_5fprocess_5fincoming_5fmsg',['shim_process_incoming_msg',['../msgpack_8c.html#a6d46912fe4508a29aa142b46adf9ad14',1,'msgpack.c']]],
+  ['shim_5fqueue_5fclear',['shim_queue_clear',['../queue_8c.html#a281fd7922a409a490f03185f5dddf9bb',1,'queue.c']]],
+  ['shim_5fqueue_5fdequeue',['shim_queue_dequeue',['../queue_8c.html#a16453cd81534e73913d5278dd4ed963e',1,'queue.c']]],
+  ['shim_5fqueue_5fenqueue',['shim_queue_enqueue',['../queue_8c.html#a91e0506960ee03e642e8c0be647b0988',1,'queue.c']]],
+  ['shim_5fregister_5fevent_5fcallbacks',['shim_register_event_callbacks',['../shim_8c.html#ad5aa06f95ae540a05b0117bd70de7feb',1,'shim.c']]],
+  ['shim_5fwrite_5foutgoing_5fmsg',['shim_write_outgoing_msg',['../msgpack_8c.html#a7c4f8d9730bb09b4af136888b1b34d50',1,'msgpack.c']]],
+  ['simpleq_5fentry',['SIMPLEQ_ENTRY',['../structShimUpdate.html#ae2b4c1c764b214fbf297726abd1a3036',1,'ShimUpdate']]]
+];
