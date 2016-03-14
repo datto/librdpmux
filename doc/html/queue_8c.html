@@ -32,9 +32,9 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">librdpmux
-   &#160;<span id="projectnumber">0.1.0</span>
+   &#160;<span id="projectnumber">0.2.0</span>
    </div>
-   <div id="projectbrief">Library to provide low-level QEMU guest interaction capabilties outside the hypervisor.</div>
+   <div id="projectbrief">Library to provide low-level hypervisor guest interaction capabilties outside the hypervisor.</div>
   </td>
  </tr>
  </tbody>
@@ -115,25 +115,25 @@ $(document).ready(function(){initNavTree('queue_8c.html','');});
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a16453cd81534e73913d5278dd4ed963e"><td class="memItemLeft" align="right" valign="top">void *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="queue_8c.html#a16453cd81534e73913d5278dd4ed963e">shim_queue_dequeue</a> (<a class="el" href="structShimMsgQueue.html">ShimMsgQueue</a> *q)</td></tr>
-<tr class="memdesc:a16453cd81534e73913d5278dd4ed963e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Dequeues an update.  <a href="#a16453cd81534e73913d5278dd4ed963e">More...</a><br /></td></tr>
-<tr class="separator:a16453cd81534e73913d5278dd4ed963e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a91e0506960ee03e642e8c0be647b0988"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="queue_8c.html#a91e0506960ee03e642e8c0be647b0988">shim_queue_enqueue</a> (<a class="el" href="structShimMsgQueue.html">ShimMsgQueue</a> *q, <a class="el" href="structShimUpdate.html">ShimUpdate</a> *update)</td></tr>
-<tr class="memdesc:a91e0506960ee03e642e8c0be647b0988"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enqueues an update.  <a href="#a91e0506960ee03e642e8c0be647b0988">More...</a><br /></td></tr>
-<tr class="separator:a91e0506960ee03e642e8c0be647b0988"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a281fd7922a409a490f03185f5dddf9bb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="queue_8c.html#a281fd7922a409a490f03185f5dddf9bb">shim_queue_clear</a> (<a class="el" href="structShimMsgQueue.html">ShimMsgQueue</a> *q)</td></tr>
-<tr class="memdesc:a281fd7922a409a490f03185f5dddf9bb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Clears a queue of all updates.  <a href="#a281fd7922a409a490f03185f5dddf9bb">More...</a><br /></td></tr>
-<tr class="separator:a281fd7922a409a490f03185f5dddf9bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af55682d0adb913312be5a7a4d5a5de82"><td class="memItemLeft" align="right" valign="top">void *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="queue_8c.html#af55682d0adb913312be5a7a4d5a5de82">mux_queue_dequeue</a> (<a class="el" href="structMuxMsgQueue.html">MuxMsgQueue</a> *q)</td></tr>
+<tr class="memdesc:af55682d0adb913312be5a7a4d5a5de82"><td class="mdescLeft">&#160;</td><td class="mdescRight">Dequeues an update.  <a href="#af55682d0adb913312be5a7a4d5a5de82">More...</a><br /></td></tr>
+<tr class="separator:af55682d0adb913312be5a7a4d5a5de82"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae70da87aa1808776b77bcecda14162ca"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="queue_8c.html#ae70da87aa1808776b77bcecda14162ca">mux_queue_enqueue</a> (<a class="el" href="structMuxMsgQueue.html">MuxMsgQueue</a> *q, <a class="el" href="structMuxUpdate.html">MuxUpdate</a> *update)</td></tr>
+<tr class="memdesc:ae70da87aa1808776b77bcecda14162ca"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enqueues an update.  <a href="#ae70da87aa1808776b77bcecda14162ca">More...</a><br /></td></tr>
+<tr class="separator:ae70da87aa1808776b77bcecda14162ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad6b2e0b7e34c081cb3e7a937ee51cb57"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="queue_8c.html#ad6b2e0b7e34c081cb3e7a937ee51cb57">mux_queue_clear</a> (<a class="el" href="structMuxMsgQueue.html">MuxMsgQueue</a> *q)</td></tr>
+<tr class="memdesc:ad6b2e0b7e34c081cb3e7a937ee51cb57"><td class="mdescLeft">&#160;</td><td class="mdescRight">Clears a queue of all updates.  <a href="#ad6b2e0b7e34c081cb3e7a937ee51cb57">More...</a><br /></td></tr>
+<tr class="separator:ad6b2e0b7e34c081cb3e7a937ee51cb57"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function Documentation</h2>
-<a class="anchor" id="a281fd7922a409a490f03185f5dddf9bb"></a>
+<a class="anchor" id="ad6b2e0b7e34c081cb3e7a937ee51cb57"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void shim_queue_clear </td>
+          <td class="memname">void mux_queue_clear </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structShimMsgQueue.html">ShimMsgQueue</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="structMuxMsgQueue.html">MuxMsgQueue</a> *&#160;</td>
           <td class="paramname"><em>q</em></td><td>)</td>
           <td></td>
         </tr>
@@ -150,14 +150,14 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="a16453cd81534e73913d5278dd4ed963e"></a>
+<a class="anchor" id="af55682d0adb913312be5a7a4d5a5de82"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void* shim_queue_dequeue </td>
+          <td class="memname">void* mux_queue_dequeue </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structShimMsgQueue.html">ShimMsgQueue</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="structMuxMsgQueue.html">MuxMsgQueue</a> *&#160;</td>
           <td class="paramname"><em>q</em></td><td>)</td>
           <td></td>
         </tr>
@@ -175,20 +175,20 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="a91e0506960ee03e642e8c0be647b0988"></a>
+<a class="anchor" id="ae70da87aa1808776b77bcecda14162ca"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void shim_queue_enqueue </td>
+          <td class="memname">void mux_queue_enqueue </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structShimMsgQueue.html">ShimMsgQueue</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="structMuxMsgQueue.html">MuxMsgQueue</a> *&#160;</td>
           <td class="paramname"><em>q</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structShimUpdate.html">ShimUpdate</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="structMuxUpdate.html">MuxUpdate</a> *&#160;</td>
           <td class="paramname"><em>update</em>&#160;</td>
         </tr>
         <tr>

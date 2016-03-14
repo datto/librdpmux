@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['type',['type',['../structShimUpdate.html#a56f4d6a5e1dfe2e02ae24626d753ff3e',1,'ShimUpdate']]]
+  ['type',['type',['../structMuxUpdate.html#a5a89428d2157ebddc50f77557ff465c0',1,'MuxUpdate']]]
 ];

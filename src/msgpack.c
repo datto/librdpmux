@@ -14,7 +14,7 @@
  * @param buf Pointer to the byte buffer you want to be stored in here.
  * @param size The size in bytes of the byte buffer.
  */
-static void shim_nnstr_init(nnStr *msg, void *buf, int size)
+static void mux_nnstr_init(nnStr *msg, void *buf, int size)
 {
     msg->size = size;
     msg->buf = buf;
@@ -35,14 +35,14 @@ static void shim_nnstr_init(nnStr *msg, void *buf, int size)
  * @param data The data to be written
  * @param count The size of data in bytes
  */
-static size_t shim_msg_writer(cmp_ctx_t *ctx, const void *data, size_t count)
+static size_t mux_msg_writer(cmp_ctx_t *ctx, const void *data, size_t count)
 {
     nnStr *msg = (nnStr *) ctx->buf;
 
     if (msg->buf == NULL) {
         // if buf needs to be newly allocated to hold our serialization
         // This typically happens when we start creating our serialized data
-        // and this is the first invocation of shim_msg_writer.
+        // and this is the first invocation of mux_msg_writer.
         //printf("Allocating new buffer because msg->buf is NULL\n");
         void *new_buf = g_malloc0(count * sizeof(uint8_t));
         if (new_buf) {
@@ -90,7 +90,7 @@ static size_t shim_msg_writer(cmp_ctx_t *ctx, const void *data, size_t count)
  * @param data The data that was read out.
  * @param limit The maximum number of bytes to read.
  */
-static bool shim_msg_reader(cmp_ctx_t *ctx, void *data, size_t limit)
+static bool mux_msg_reader(cmp_ctx_t *ctx, void *data, size_t limit)
 {
     // reads size_t bytes of data out of ctx->buf.
     nnStr *msg = (nnStr *) ctx->buf;
@@ -109,7 +109,7 @@ static bool shim_msg_reader(cmp_ctx_t *ctx, void *data, size_t limit)
 }
 
 /**
- * @brief Deserializes keyboard messages and fires the shim_receive_kb() callback with the data.
+ * @brief Deserializes keyboard messages and fires the mux_receive_kb() callback with the data.
  *
  * Keyboard messages are encoded as a two-item msgpack array of two uint32_ts, keycode at index 0, flags at index 1.
  *
@@ -117,7 +117,7 @@ static bool shim_msg_reader(cmp_ctx_t *ctx, void *data, size_t limit)
  * @param msg Unused, here for historical reasons.
  * @todo Remove msg parameter, unused
  */
-static void shim_process_incoming_kb_msg(cmp_ctx_t *cmp, nnStr *msg)
+static void mux_process_incoming_kb_msg(cmp_ctx_t *cmp, nnStr *msg)
 {
     uint32_t flags, keycode;
 
@@ -131,11 +131,11 @@ static void shim_process_incoming_kb_msg(cmp_ctx_t *cmp, nnStr *msg)
         return;
     }
 
-    callbacks.shim_receive_kb(keycode, flags);
+    callbacks.mux_receive_kb(keycode, flags);
 }
 
 /**
- * @brief Deserializes mouse messages and fires the shim_receive_mouse() callback with the decoded data.
+ * @brief Deserializes mouse messages and fires the mux_receive_mouse() callback with the decoded data.
  *
  * Mouse messages are encoded as a 3-item msgpack array of uint32_ts, ordered as such: mouse_x, mouse_y, flags.
  *
@@ -143,7 +143,7 @@ static void shim_process_incoming_kb_msg(cmp_ctx_t *cmp, nnStr *msg)
  * @param msg Unused, here for historical reasons.
  * @todo Remove msg parameter, unused
  */
-static void shim_process_incoming_mouse_msg(cmp_ctx_t *cmp, nnStr *msg)
+static void mux_process_incoming_mouse_msg(cmp_ctx_t *cmp, nnStr *msg)
 {
     uint32_t flags, mouse_x, mouse_y;
 
@@ -162,7 +162,7 @@ static void shim_process_incoming_mouse_msg(cmp_ctx_t *cmp, nnStr *msg)
         return;
     }
 
-    callbacks.shim_receive_mouse(mouse_x, mouse_y, flags);
+    callbacks.mux_receive_mouse(mouse_x, mouse_y, flags);
 }
 
 /**
@@ -172,15 +172,15 @@ static void shim_process_incoming_mouse_msg(cmp_ctx_t *cmp, nnStr *msg)
  * @param buf The raw data to be wrapped in a cmp decoding struct.
  * @param nbytes The size of buf.
  */
-void shim_process_incoming_msg(void *buf, int nbytes)
+void mux_process_incoming_msg(void *buf, int nbytes)
 {
     // deserialize msg into component parts
     cmp_ctx_t cmp;
     uint32_t msg_type, array_size;
 
     nnStr msg;
-    shim_nnstr_init(&msg, buf, nbytes);
-    cmp_init(&cmp, &msg, shim_msg_reader, shim_msg_writer);
+    mux_nnstr_init(&msg, buf, nbytes);
+    cmp_init(&cmp, &msg, mux_msg_reader, mux_msg_writer);
 
     // read array out
     // we don't care about array size since we have a better way (the type)
@@ -194,11 +194,11 @@ void shim_process_incoming_msg(void *buf, int nbytes)
     switch(msg_type) {
         case MOUSE:
             //printf("LIBSHIM: Processing incoming mouse msg\n");
-            shim_process_incoming_mouse_msg(&cmp, &msg);
+            mux_process_incoming_mouse_msg(&cmp, &msg);
             break;
         case KEYBOARD:
             //printf("LIBSHIM: Processing incoming kb msg\n");
-            shim_process_incoming_kb_msg(&cmp, &msg);
+            mux_process_incoming_kb_msg(&cmp, &msg);
             break;
         case DISPLAY_UPDATE_COMPLETE:
             //printf("LIBSHIM: Signaling shm_cond for DISPLAY_UPDATE_COMPLETE wakeup\n");
@@ -219,7 +219,7 @@ void shim_process_incoming_msg(void *buf, int nbytes)
  * @param cmp The cmp struct that holds the write buffer.
  * @param update The update to serialize.
  */
-static void shim_write_outgoing_update_msg(cmp_ctx_t *cmp, ShimUpdate *update)
+static void mux_write_outgoing_update_msg(cmp_ctx_t *cmp, MuxUpdate *update)
 {
     display_update u = update->disp_update;
 
@@ -248,7 +248,7 @@ static void shim_write_outgoing_update_msg(cmp_ctx_t *cmp, ShimUpdate *update)
  * @param cmp The cmp struct that holds the write buffer.
  * @param update The update to serialize.
  */
-static void shim_write_outgoing_switch_msg(cmp_ctx_t *cmp, ShimUpdate *update)
+static void mux_write_outgoing_switch_msg(cmp_ctx_t *cmp, MuxUpdate *update)
 {
     display_switch u = update->disp_switch;
 
@@ -276,19 +276,19 @@ static void shim_write_outgoing_switch_msg(cmp_ctx_t *cmp, ShimUpdate *update)
  * @param update The update to serialize.
  * @param msg The blank nnStr message to write the message to.
  */
-size_t shim_write_outgoing_msg(ShimUpdate *update, nnStr *msg)
+size_t mux_write_outgoing_msg(MuxUpdate *update, nnStr *msg)
 {
     // takes a struct and serializes it to a msgpack message.
     //printf("LIBSHIM: Writing a new message now!\n");
     cmp_ctx_t cmp;
     //nnStr msg;
-    shim_nnstr_init(msg, msg->buf, 0);
-    cmp_init(&cmp, msg, shim_msg_reader, shim_msg_writer);
+    mux_nnstr_init(msg, msg->buf, 0);
+    cmp_init(&cmp, msg, mux_msg_reader, mux_msg_writer);
 
     if (update->type == DISPLAY_UPDATE) {
-        shim_write_outgoing_update_msg(&cmp, update);
+        mux_write_outgoing_update_msg(&cmp, update);
     } else if (update->type == DISPLAY_SWITCH) {
-        shim_write_outgoing_switch_msg(&cmp, update);
+        mux_write_outgoing_switch_msg(&cmp, update);
     } else {
         printf("ERROR: Unknown message type queued for writing!\n");
     }

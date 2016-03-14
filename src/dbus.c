@@ -21,7 +21,7 @@
  * @param out_path The path to the VM's private communication socket returned by the DBus service.
  * @param id The ID of the VM.
  */
-__PUBLIC bool shim_get_socket_path(const char *name, const char *obj, char **out_path, int id)
+__PUBLIC bool mux_get_socket_path(const char *name, const char *obj, char **out_path, int id)
 {
     if (!obj)
         return false;
@@ -50,9 +50,15 @@ __PUBLIC bool shim_get_socket_path(const char *name, const char *obj, char **out
 
     // get the list of supported protocol versions, and check if our version is in there
     protocol_versions = mux_org_rdpmux_rdpmux_get_supported_protocol_versions(proxy);
-    assert(protocol_versions != NULL);
+    if (protocol_versions == NULL) {
+        printf("DBUS: Error communicating with remote dbus service\n");
+        return false;
+    }
     unwrapped_version = g_variant_get_child_value(protocol_versions, 0);
-    assert(unwrapped_version != NULL);
+    if (unwrapped_version == NULL) {
+        printf("DBUS: Error communicating with remote dbus service\n");
+        return false;
+    }
 
     const GVariantType *type = g_variant_get_type(unwrapped_version);
 

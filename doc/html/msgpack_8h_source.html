@@ -32,9 +32,9 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">librdpmux
-   &#160;<span id="projectnumber">0.1.0</span>
+   &#160;<span id="projectnumber">0.2.0</span>
    </div>
-   <div id="projectbrief">Library to provide low-level QEMU guest interaction capabilties outside the hypervisor.</div>
+   <div id="projectbrief">Library to provide low-level hypervisor guest interaction capabilties outside the hypervisor.</div>
   </td>
  </tr>
  </tbody>
@@ -128,15 +128,15 @@ $(document).ready(function(){initNavTree('msgpack_8h_source.html','');});
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;    <span class="keywordtype">int</span> pos; <span class="comment">// current read position in buffer</span></div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;} <a class="code" href="structnn__str.html">nnStr</a>;</div>
 <div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;</div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="keywordtype">size_t</span> <a class="code" href="msgpack_8c.html#a7c4f8d9730bb09b4af136888b1b34d50">shim_write_outgoing_msg</a>(<a class="code" href="structShimUpdate.html">ShimUpdate</a> *update, <a class="code" href="structnn__str.html">nnStr</a> *msg);</div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="keywordtype">void</span> <a class="code" href="msgpack_8c.html#a6d46912fe4508a29aa142b46adf9ad14">shim_process_incoming_msg</a>(<span class="keywordtype">void</span> *buf, <span class="keywordtype">int</span> nbytes);</div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="keywordtype">size_t</span> <a class="code" href="msgpack_8c.html#a91125b777db6e8cadaa415759607d939">mux_write_outgoing_msg</a>(<a class="code" href="structMuxUpdate.html">MuxUpdate</a> *update, <a class="code" href="structnn__str.html">nnStr</a> *msg);</div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="keywordtype">void</span> <a class="code" href="msgpack_8c.html#a982fc3ff64c98691c4e7cc624e2dd96b">mux_process_incoming_msg</a>(<span class="keywordtype">void</span> *buf, <span class="keywordtype">int</span> nbytes);</div>
 <div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;</div>
 <div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="preprocessor">#endif //SHIM_MSGPACK_H</span></div>
 <div class="ttc" id="structnn__str_html"><div class="ttname"><a href="structnn__str.html">nn_str</a></div><div class="ttdef"><b>Definition:</b> msgpack.h:14</div></div>
-<div class="ttc" id="msgpack_8c_html_a7c4f8d9730bb09b4af136888b1b34d50"><div class="ttname"><a href="msgpack_8c.html#a7c4f8d9730bb09b4af136888b1b34d50">shim_write_outgoing_msg</a></div><div class="ttdeci">size_t shim_write_outgoing_msg(ShimUpdate *update, nnStr *msg)</div><div class="ttdoc">Writes an outgoing event to a msgpack-encoded message. </div><div class="ttdef"><b>Definition:</b> msgpack.c:279</div></div>
-<div class="ttc" id="msgpack_8c_html_a6d46912fe4508a29aa142b46adf9ad14"><div class="ttname"><a href="msgpack_8c.html#a6d46912fe4508a29aa142b46adf9ad14">shim_process_incoming_msg</a></div><div class="ttdeci">void shim_process_incoming_msg(void *buf, int nbytes)</div><div class="ttdoc">Serializes incoming raw data into cmp struct for processing and invokes correct deserialization funct...</div><div class="ttdef"><b>Definition:</b> msgpack.c:175</div></div>
+<div class="ttc" id="msgpack_8c_html_a91125b777db6e8cadaa415759607d939"><div class="ttname"><a href="msgpack_8c.html#a91125b777db6e8cadaa415759607d939">mux_write_outgoing_msg</a></div><div class="ttdeci">size_t mux_write_outgoing_msg(MuxUpdate *update, nnStr *msg)</div><div class="ttdoc">Writes an outgoing event to a msgpack-encoded message. </div><div class="ttdef"><b>Definition:</b> msgpack.c:279</div></div>
+<div class="ttc" id="msgpack_8c_html_a982fc3ff64c98691c4e7cc624e2dd96b"><div class="ttname"><a href="msgpack_8c.html#a982fc3ff64c98691c4e7cc624e2dd96b">mux_process_incoming_msg</a></div><div class="ttdeci">void mux_process_incoming_msg(void *buf, int nbytes)</div><div class="ttdoc">Serializes incoming raw data into cmp struct for processing and invokes correct deserialization funct...</div><div class="ttdef"><b>Definition:</b> msgpack.c:175</div></div>
 <div class="ttc" id="common_8h_html"><div class="ttname"><a href="common_8h.html">common.h</a></div></div>
-<div class="ttc" id="structShimUpdate_html"><div class="ttname"><a href="structShimUpdate.html">ShimUpdate</a></div><div class="ttdoc">Object to hold information about the various types of events. </div><div class="ttdef"><b>Definition:</b> common.h:144</div></div>
+<div class="ttc" id="structMuxUpdate_html"><div class="ttname"><a href="structMuxUpdate.html">MuxUpdate</a></div><div class="ttdoc">Object to hold information about the various types of events. </div><div class="ttdef"><b>Definition:</b> common.h:149</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

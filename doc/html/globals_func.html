@@ -32,9 +32,9 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">librdpmux
-   &#160;<span id="projectnumber">0.1.0</span>
+   &#160;<span id="projectnumber">0.2.0</span>
    </div>
-   <div id="projectbrief">Library to provide low-level QEMU guest interaction capabilties outside the hypervisor.</div>
+   <div id="projectbrief">Library to provide low-level hypervisor guest interaction capabilties outside the hypervisor.</div>
   </td>
  </tr>
  </tbody>
@@ -116,56 +116,56 @@ $(document).ready(function(){initNavTree('globals_func.html','');});
 
 <div class="contents">
 &#160;<ul>
-<li>shim_connect()
-: <a class="el" href="nanomsg_8c.html#a593e2f1004967bd9579626706a4a194c">nanomsg.c</a>
+<li>mux_connect()
+: <a class="el" href="nanomsg_8c.html#ad36b0b71c7159fa4eaf19866cfd09fcb">nanomsg.c</a>
 </li>
-<li>shim_display_buffer_update_loop()
-: <a class="el" href="shim_8c.html#ad2d5acae095242a3b431558a872b1017">shim.c</a>
+<li>mux_display_buffer_update_loop()
+: <a class="el" href="rdpmux_8c.html#a5fb9aa442377cc4ed01a30f0ce2fc888">rdpmux.c</a>
 </li>
-<li>shim_display_refresh()
-: <a class="el" href="shim_8c.html#a178f928d9551cd134012ad32d21976a6">shim.c</a>
+<li>mux_display_refresh()
+: <a class="el" href="rdpmux_8c.html#a7bb243d6234dacee4dceec101b7c1db4">rdpmux.c</a>
 </li>
-<li>shim_display_switch()
-: <a class="el" href="shim_8c.html#ad300e030d42d8d266d761cdaec47f832">shim.c</a>
+<li>mux_display_switch()
+: <a class="el" href="rdpmux_8c.html#a10c939e82864d15adb49c7c536ce9962">rdpmux.c</a>
 </li>
-<li>shim_display_update()
-: <a class="el" href="shim_8c.html#aa13fef43632c4a7c7f2118c6c893b335">shim.c</a>
+<li>mux_display_update()
+: <a class="el" href="rdpmux_8c.html#abca5c99994f168c159ce63cc2bf6ca07">rdpmux.c</a>
 </li>
-<li>shim_get_socket_path()
-: <a class="el" href="dbus_8c.html#ae0abe3e1c326ae64034b5b2660c4358d">dbus.c</a>
+<li>mux_get_socket_path()
+: <a class="el" href="dbus_8c.html#ad5fe4fea41ad5ccc75d8799c6b6c96e2">dbus.c</a>
 </li>
-<li>shim_init_display_struct()
-: <a class="el" href="shim_8c.html#a9c6674cfc4d057c29da621992888b6ae">shim.c</a>
+<li>mux_init_display_struct()
+: <a class="el" href="rdpmux_8c.html#ac834204be0cd580a03cf96d08db55365">rdpmux.c</a>
 </li>
-<li>shim_mainloop()
-: <a class="el" href="shim_8c.html#ab198b5d9a5378234fdc3aa55dbccc37f">shim.c</a>
+<li>mux_mainloop()
+: <a class="el" href="rdpmux_8c.html#a3ea6540759976fee25256d277b997463">rdpmux.c</a>
 </li>
-<li>shim_nn_recv_msg()
-: <a class="el" href="nanomsg_8c.html#a895bd8fd7f6e970d26b8f8817863ae8b">nanomsg.c</a>
+<li>mux_nn_recv_msg()
+: <a class="el" href="nanomsg_8c.html#a9f97b8b18b913e3a6db191776cf460ab">nanomsg.c</a>
 </li>
-<li>shim_nn_send_msg()
-: <a class="el" href="nanomsg_8c.html#a258144d13768f139814ff3f1535578ab">nanomsg.c</a>
+<li>mux_nn_send_msg()
+: <a class="el" href="nanomsg_8c.html#a940d421175a39f3a65b4e63372cf85cb">nanomsg.c</a>
 </li>
-<li>shim_out_loop()
-: <a class="el" href="shim_8c.html#abe21d95e2d23dd8d791e940decaed431">shim.c</a>
+<li>mux_out_loop()
+: <a class="el" href="rdpmux_8c.html#a511f492674d105405d02ecc3ea4894db">rdpmux.c</a>
 </li>
-<li>shim_process_incoming_msg()
-: <a class="el" href="msgpack_8c.html#a6d46912fe4508a29aa142b46adf9ad14">msgpack.c</a>
+<li>mux_process_incoming_msg()
+: <a class="el" href="msgpack_8c.html#a982fc3ff64c98691c4e7cc624e2dd96b">msgpack.c</a>
 </li>
-<li>shim_queue_clear()
-: <a class="el" href="queue_8c.html#a281fd7922a409a490f03185f5dddf9bb">queue.c</a>
+<li>mux_queue_clear()
+: <a class="el" href="queue_8c.html#ad6b2e0b7e34c081cb3e7a937ee51cb57">queue.c</a>
 </li>
-<li>shim_queue_dequeue()
-: <a class="el" href="queue_8c.html#a16453cd81534e73913d5278dd4ed963e">queue.c</a>
+<li>mux_queue_dequeue()
+: <a class="el" href="queue_8c.html#af55682d0adb913312be5a7a4d5a5de82">queue.c</a>
 </li>
-<li>shim_queue_enqueue()
-: <a class="el" href="queue_8c.html#a91e0506960ee03e642e8c0be647b0988">queue.c</a>
+<li>mux_queue_enqueue()
+: <a class="el" href="queue_8c.html#ae70da87aa1808776b77bcecda14162ca">queue.c</a>
 </li>
-<li>shim_register_event_callbacks()
-: <a class="el" href="shim_8c.html#ad5aa06f95ae540a05b0117bd70de7feb">shim.c</a>
+<li>mux_register_event_callbacks()
+: <a class="el" href="rdpmux_8c.html#a2bd7ec31ed5cd38889c7b99fe2f3cf05">rdpmux.c</a>
 </li>
-<li>shim_write_outgoing_msg()
-: <a class="el" href="msgpack_8c.html#a7c4f8d9730bb09b4af136888b1b34d50">msgpack.c</a>
+<li>mux_write_outgoing_msg()
+: <a class="el" href="msgpack_8c.html#a91125b777db6e8cadaa415759607d939">msgpack.c</a>
 </li>
 </ul>
 </div><!-- contents -->

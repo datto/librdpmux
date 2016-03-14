@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['update_5fack',['update_ack',['../structupdate__ack.html',1,'update_ack'],['../common_8h.html#acfaa17abface2766e2dd0d096c068eda',1,'update_ack():&#160;common.h']]]
+  ['todo_20list',['Todo List',['../todo.html',1,'']]],
+  ['type',['type',['../structMuxUpdate.html#a5a89428d2157ebddc50f77557ff465c0',1,'MuxUpdate']]]
 ];

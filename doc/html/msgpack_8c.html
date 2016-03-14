@@ -32,9 +32,9 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">librdpmux
-   &#160;<span id="projectnumber">0.1.0</span>
+   &#160;<span id="projectnumber">0.2.0</span>
    </div>
-   <div id="projectbrief">Library to provide low-level QEMU guest interaction capabilties outside the hypervisor.</div>
+   <div id="projectbrief">Library to provide low-level hypervisor guest interaction capabilties outside the hypervisor.</div>
   </td>
  </tr>
  </tbody>
@@ -115,20 +115,20 @@ $(document).ready(function(){initNavTree('msgpack_8c.html','');});
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a6d46912fe4508a29aa142b46adf9ad14"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="msgpack_8c.html#a6d46912fe4508a29aa142b46adf9ad14">shim_process_incoming_msg</a> (void *buf, int nbytes)</td></tr>
-<tr class="memdesc:a6d46912fe4508a29aa142b46adf9ad14"><td class="mdescLeft">&#160;</td><td class="mdescRight">Serializes incoming raw data into cmp struct for processing and invokes correct deserialization function for type of message received.  <a href="#a6d46912fe4508a29aa142b46adf9ad14">More...</a><br /></td></tr>
-<tr class="separator:a6d46912fe4508a29aa142b46adf9ad14"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7c4f8d9730bb09b4af136888b1b34d50"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="msgpack_8c.html#a7c4f8d9730bb09b4af136888b1b34d50">shim_write_outgoing_msg</a> (<a class="el" href="structShimUpdate.html">ShimUpdate</a> *update, <a class="el" href="structnn__str.html">nnStr</a> *msg)</td></tr>
-<tr class="memdesc:a7c4f8d9730bb09b4af136888b1b34d50"><td class="mdescLeft">&#160;</td><td class="mdescRight">Writes an outgoing event to a msgpack-encoded message.  <a href="#a7c4f8d9730bb09b4af136888b1b34d50">More...</a><br /></td></tr>
-<tr class="separator:a7c4f8d9730bb09b4af136888b1b34d50"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a982fc3ff64c98691c4e7cc624e2dd96b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="msgpack_8c.html#a982fc3ff64c98691c4e7cc624e2dd96b">mux_process_incoming_msg</a> (void *buf, int nbytes)</td></tr>
+<tr class="memdesc:a982fc3ff64c98691c4e7cc624e2dd96b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Serializes incoming raw data into cmp struct for processing and invokes correct deserialization function for type of message received.  <a href="#a982fc3ff64c98691c4e7cc624e2dd96b">More...</a><br /></td></tr>
+<tr class="separator:a982fc3ff64c98691c4e7cc624e2dd96b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a91125b777db6e8cadaa415759607d939"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="msgpack_8c.html#a91125b777db6e8cadaa415759607d939">mux_write_outgoing_msg</a> (<a class="el" href="structMuxUpdate.html">MuxUpdate</a> *update, <a class="el" href="structnn__str.html">nnStr</a> *msg)</td></tr>
+<tr class="memdesc:a91125b777db6e8cadaa415759607d939"><td class="mdescLeft">&#160;</td><td class="mdescRight">Writes an outgoing event to a msgpack-encoded message.  <a href="#a91125b777db6e8cadaa415759607d939">More...</a><br /></td></tr>
+<tr class="separator:a91125b777db6e8cadaa415759607d939"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function Documentation</h2>
-<a class="anchor" id="a6d46912fe4508a29aa142b46adf9ad14"></a>
+<a class="anchor" id="a982fc3ff64c98691c4e7cc624e2dd96b"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void shim_process_incoming_msg </td>
+          <td class="memname">void mux_process_incoming_msg </td>
           <td>(</td>
           <td class="paramtype">void *&#160;</td>
           <td class="paramname"><em>buf</em>, </td>
@@ -158,14 +158,14 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="a7c4f8d9730bb09b4af136888b1b34d50"></a>
+<a class="anchor" id="a91125b777db6e8cadaa415759607d939"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">size_t shim_write_outgoing_msg </td>
+          <td class="memname">size_t mux_write_outgoing_msg </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structShimUpdate.html">ShimUpdate</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="structMuxUpdate.html">MuxUpdate</a> *&#160;</td>
           <td class="paramname"><em>update</em>, </td>
         </tr>
         <tr>

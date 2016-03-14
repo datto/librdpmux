@@ -32,9 +32,9 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">librdpmux
-   &#160;<span id="projectnumber">0.1.0</span>
+   &#160;<span id="projectnumber">0.2.0</span>
    </div>
-   <div id="projectbrief">Library to provide low-level QEMU guest interaction capabilties outside the hypervisor.</div>
+   <div id="projectbrief">Library to provide low-level hypervisor guest interaction capabilties outside the hypervisor.</div>
   </td>
  </tr>
  </tbody>
@@ -119,18 +119,18 @@ $(document).ready(function(){initNavTree('queue_8h_source.html','');});
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="common_8h.html">common.h</a>&quot;</span></div>
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &quot;lib/libqueue.h&quot;</span></div>
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;</div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="keywordtype">void</span> *<a class="code" href="queue_8c.html#a16453cd81534e73913d5278dd4ed963e">shim_queue_dequeue</a>(<a class="code" href="structShimMsgQueue.html">ShimMsgQueue</a> *q);</div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="keywordtype">void</span> <a class="code" href="queue_8c.html#a91e0506960ee03e642e8c0be647b0988">shim_queue_enqueue</a>(<a class="code" href="structShimMsgQueue.html">ShimMsgQueue</a> *q, <a class="code" href="structShimUpdate.html">ShimUpdate</a> *update);</div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="keywordtype">void</span> <a class="code" href="queue_8c.html#a281fd7922a409a490f03185f5dddf9bb">shim_queue_clear</a>(<a class="code" href="structShimMsgQueue.html">ShimMsgQueue</a> *q);</div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="keywordtype">void</span> *<a class="code" href="queue_8c.html#af55682d0adb913312be5a7a4d5a5de82">mux_queue_dequeue</a>(<a class="code" href="structMuxMsgQueue.html">MuxMsgQueue</a> *q);</div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="keywordtype">void</span> <a class="code" href="queue_8c.html#ae70da87aa1808776b77bcecda14162ca">mux_queue_enqueue</a>(<a class="code" href="structMuxMsgQueue.html">MuxMsgQueue</a> *q, <a class="code" href="structMuxUpdate.html">MuxUpdate</a> *update);</div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="keywordtype">void</span> <a class="code" href="queue_8c.html#ad6b2e0b7e34c081cb3e7a937ee51cb57">mux_queue_clear</a>(<a class="code" href="structMuxMsgQueue.html">MuxMsgQueue</a> *q);</div>
 <div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;</div>
 <div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;</div>
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="preprocessor">#endif //SHIM_QUEUE_H</span></div>
-<div class="ttc" id="queue_8c_html_a16453cd81534e73913d5278dd4ed963e"><div class="ttname"><a href="queue_8c.html#a16453cd81534e73913d5278dd4ed963e">shim_queue_dequeue</a></div><div class="ttdeci">void * shim_queue_dequeue(ShimMsgQueue *q)</div><div class="ttdoc">Dequeues an update. </div><div class="ttdef"><b>Definition:</b> queue.c:21</div></div>
-<div class="ttc" id="structShimMsgQueue_html"><div class="ttname"><a href="structShimMsgQueue.html">ShimMsgQueue</a></div><div class="ttdoc">queue to hold ShimUpdate objects. </div><div class="ttdef"><b>Definition:</b> common.h:170</div></div>
-<div class="ttc" id="queue_8c_html_a281fd7922a409a490f03185f5dddf9bb"><div class="ttname"><a href="queue_8c.html#a281fd7922a409a490f03185f5dddf9bb">shim_queue_clear</a></div><div class="ttdeci">void shim_queue_clear(ShimMsgQueue *q)</div><div class="ttdoc">Clears a queue of all updates. </div><div class="ttdef"><b>Definition:</b> queue.c:61</div></div>
-<div class="ttc" id="queue_8c_html_a91e0506960ee03e642e8c0be647b0988"><div class="ttname"><a href="queue_8c.html#a91e0506960ee03e642e8c0be647b0988">shim_queue_enqueue</a></div><div class="ttdeci">void shim_queue_enqueue(ShimMsgQueue *q, ShimUpdate *update)</div><div class="ttdoc">Enqueues an update. </div><div class="ttdef"><b>Definition:</b> queue.c:47</div></div>
+<div class="ttc" id="structMuxMsgQueue_html"><div class="ttname"><a href="structMuxMsgQueue.html">MuxMsgQueue</a></div><div class="ttdoc">queue to hold ShimUpdate objects. </div><div class="ttdef"><b>Definition:</b> common.h:175</div></div>
+<div class="ttc" id="queue_8c_html_af55682d0adb913312be5a7a4d5a5de82"><div class="ttname"><a href="queue_8c.html#af55682d0adb913312be5a7a4d5a5de82">mux_queue_dequeue</a></div><div class="ttdeci">void * mux_queue_dequeue(MuxMsgQueue *q)</div><div class="ttdoc">Dequeues an update. </div><div class="ttdef"><b>Definition:</b> queue.c:21</div></div>
+<div class="ttc" id="queue_8c_html_ad6b2e0b7e34c081cb3e7a937ee51cb57"><div class="ttname"><a href="queue_8c.html#ad6b2e0b7e34c081cb3e7a937ee51cb57">mux_queue_clear</a></div><div class="ttdeci">void mux_queue_clear(MuxMsgQueue *q)</div><div class="ttdoc">Clears a queue of all updates. </div><div class="ttdef"><b>Definition:</b> queue.c:61</div></div>
+<div class="ttc" id="queue_8c_html_ae70da87aa1808776b77bcecda14162ca"><div class="ttname"><a href="queue_8c.html#ae70da87aa1808776b77bcecda14162ca">mux_queue_enqueue</a></div><div class="ttdeci">void mux_queue_enqueue(MuxMsgQueue *q, MuxUpdate *update)</div><div class="ttdoc">Enqueues an update. </div><div class="ttdef"><b>Definition:</b> queue.c:47</div></div>
 <div class="ttc" id="common_8h_html"><div class="ttname"><a href="common_8h.html">common.h</a></div></div>
-<div class="ttc" id="structShimUpdate_html"><div class="ttname"><a href="structShimUpdate.html">ShimUpdate</a></div><div class="ttdoc">Object to hold information about the various types of events. </div><div class="ttdef"><b>Definition:</b> common.h:144</div></div>
+<div class="ttc" id="structMuxUpdate_html"><div class="ttname"><a href="structMuxUpdate.html">MuxUpdate</a></div><div class="ttdoc">Object to hold information about the various types of events. </div><div class="ttdef"><b>Definition:</b> common.h:149</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

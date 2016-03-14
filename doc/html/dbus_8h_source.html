@@ -32,9 +32,9 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">librdpmux
-   &#160;<span id="projectnumber">0.1.0</span>
+   &#160;<span id="projectnumber">0.2.0</span>
    </div>
-   <div id="projectbrief">Library to provide low-level QEMU guest interaction capabilties outside the hypervisor.</div>
+   <div id="projectbrief">Library to provide low-level hypervisor guest interaction capabilties outside the hypervisor.</div>
   </td>
  </tr>
  </tbody>
@@ -120,11 +120,11 @@ $(document).ready(function(){initNavTree('dbus_8h_source.html','');});
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &quot;lib/connector.h&quot;</span></div>
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;</div>
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;</div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="keywordtype">bool</span> <a class="code" href="dbus_8c.html#ae0abe3e1c326ae64034b5b2660c4358d">shim_get_socket_path</a>(<span class="keywordtype">char</span> *name, <span class="keywordtype">char</span> *obj, <span class="keywordtype">char</span> **out_path, <span class="keywordtype">int</span> <span class="keywordtype">id</span>);</div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="keywordtype">bool</span> <a class="code" href="dbus_8c.html#ad5fe4fea41ad5ccc75d8799c6b6c96e2">mux_get_socket_path</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keyword">const</span> <span class="keywordtype">char</span> *obj, <span class="keywordtype">char</span> **out_path, <span class="keywordtype">int</span> <span class="keywordtype">id</span>);</div>
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;</div>
 <div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;</div>
 <div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="preprocessor">#endif //SHIM_DBUS_H</span></div>
-<div class="ttc" id="dbus_8c_html_ae0abe3e1c326ae64034b5b2660c4358d"><div class="ttname"><a href="dbus_8c.html#ae0abe3e1c326ae64034b5b2660c4358d">shim_get_socket_path</a></div><div class="ttdeci">__PUBLIC bool shim_get_socket_path(char *name, char *obj, char **out_path, int id)</div><div class="ttdoc">Gets the socket path from the DBus service passed in. </div><div class="ttdef"><b>Definition:</b> dbus.c:24</div></div>
+<div class="ttc" id="dbus_8c_html_ad5fe4fea41ad5ccc75d8799c6b6c96e2"><div class="ttname"><a href="dbus_8c.html#ad5fe4fea41ad5ccc75d8799c6b6c96e2">mux_get_socket_path</a></div><div class="ttdeci">__PUBLIC bool mux_get_socket_path(const char *name, const char *obj, char **out_path, int id)</div><div class="ttdoc">Gets the socket path from the DBus service passed in. </div><div class="ttdef"><b>Definition:</b> dbus.c:24</div></div>
 <div class="ttc" id="common_8h_html"><div class="ttname"><a href="common_8h.html">common.h</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->

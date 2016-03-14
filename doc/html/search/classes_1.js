@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['eventcallbacks',['EventCallbacks',['../structEventCallbacks.html',1,'']]]
+  ['inputeventcallbacks',['InputEventCallbacks',['../structInputEventCallbacks.html',1,'']]]
 ];

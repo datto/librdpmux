@@ -32,9 +32,9 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">librdpmux
-   &#160;<span id="projectnumber">0.1.0</span>
+   &#160;<span id="projectnumber">0.2.0</span>
    </div>
-   <div id="projectbrief">Library to provide low-level QEMU guest interaction capabilties outside the hypervisor.</div>
+   <div id="projectbrief">Library to provide low-level hypervisor guest interaction capabilties outside the hypervisor.</div>
   </td>
  </tr>
  </tbody>
@@ -128,39 +128,39 @@ $(document).ready(function(){initNavTree('index.html','');});
 <h4>Initialization</h4>
 <p>The initialization functions are responsible for starting up all the data structures internally, registering with the RDPMux server, and connecting to the communication socket. The functions in this category are:</p>
 <ol type="1">
-<li><code><a class="el" href="dbus_8c.html#ae0abe3e1c326ae64034b5b2660c4358d" title="Gets the socket path from the DBus service passed in. ">shim_get_socket_path()</a></code> registers the VM with the RDPMux server</li>
-<li><code><a class="el" href="nanomsg_8c.html#a593e2f1004967bd9579626706a4a194c" title="Connects to the nanomsg socket on path. ">shim_connect()</a></code> connects to the nanomsg socket created for this VM</li>
-<li><code><a class="el" href="shim_8c.html#a9c6674cfc4d057c29da621992888b6ae">shim_init_display_struct()</a></code> initializes all the internal data structures used by the library</li>
+<li><code><a class="el" href="dbus_8c.html#ad5fe4fea41ad5ccc75d8799c6b6c96e2" title="Gets the socket path from the DBus service passed in. ">mux_get_socket_path()</a></code> registers the VM with the RDPMux server</li>
+<li><code><a class="el" href="nanomsg_8c.html#ad36b0b71c7159fa4eaf19866cfd09fcb" title="Connects to the nanomsg socket on path. ">mux_connect()</a></code> connects to the nanomsg socket created for this VM</li>
+<li><code><a class="el" href="rdpmux_8c.html#ac834204be0cd580a03cf96d08db55365">mux_init_display_struct()</a></code> initializes all the internal data structures used by the library</li>
 </ol>
 <p>There are also three loop functions. The library is mainly driven by these loops, and all three need to be running for the library to be working. These loops are:</p>
 <ol type="1">
-<li><code><a class="el" href="shim_8c.html#ab198b5d9a5378234fdc3aa55dbccc37f">shim_mainloop()</a></code> receives events from the server</li>
-<li><code><a class="el" href="shim_8c.html#ad2d5acae095242a3b431558a872b1017">shim_display_buffer_update_loop()</a></code> manages display updates and coalesces them for transmission</li>
-<li><code><a class="el" href="shim_8c.html#abe21d95e2d23dd8d791e940decaed431">shim_out_loop()</a></code> sends messages to the server</li>
+<li><code><a class="el" href="rdpmux_8c.html#a3ea6540759976fee25256d277b997463">mux_mainloop()</a></code> receives events from the server</li>
+<li><code><a class="el" href="rdpmux_8c.html#a5fb9aa442377cc4ed01a30f0ce2fc888">mux_display_buffer_update_loop()</a></code> manages display updates and coalesces them for transmission</li>
+<li><code><a class="el" href="rdpmux_8c.html#a511f492674d105405d02ecc3ea4894db">mux_out_loop()</a></code> sends messages to the server</li>
 </ol>
 <h4>Inbound Communication</h4>
-<p>Inbound communication functions are registered as callbacks in the <code><a class="el" href="structEventCallbacks.html" title="This struct is populated by the code using the library to provide callbacks for mouse and keyboard ev...">EventCallbacks</a></code> struct and passed into the library. These functions are called when the library receives an event and needs to pass it up to the hypervisor. Right now, the only two things that the library supports are mouse and keyboard events. Currently, <code><a class="el" href="structEventCallbacks.html" title="This struct is populated by the code using the library to provide callbacks for mouse and keyboard ev...">EventCallbacks</a></code> looks like this: </p><div class="fragment"><div class="line"><span class="keyword">typedef</span> <span class="keyword">struct </span><a class="code" href="structEventCallbacks.html">EventCallbacks</a> {</div>
-<div class="line">    void (*shim_receive_kb)(uint32_t keycode, uint32_t flags); </div>
-<div class="line">    void (*shim_receive_mouse)(uint32_t x, uint32_t y, uint32_t flags);</div>
-<div class="line">} <a class="code" href="common_8h.html#aa624c0658e8560562d3e1570a13723e2">EventCallbacks</a>;</div>
+<p>Inbound communication functions are registered as callbacks in the <code><a class="el" href="structInputEventCallbacks.html" title="This struct is populated by the code using the library to provide callbacks for mouse and keyboard ev...">InputEventCallbacks</a></code> struct and passed into the library. These functions are called when the library receives an event and needs to pass it up to the hypervisor. Right now, the only two things that the library supports are mouse and keyboard events. Currently, <code><a class="el" href="structInputEventCallbacks.html" title="This struct is populated by the code using the library to provide callbacks for mouse and keyboard ev...">InputEventCallbacks</a></code> looks like this: </p><div class="fragment"><div class="line"><span class="keyword">typedef</span> <span class="keyword">struct </span><a class="code" href="structInputEventCallbacks.html">InputEventCallbacks</a> {</div>
+<div class="line">    void (*mux_receive_kb)(uint32_t keycode, uint32_t flags);</div>
+<div class="line">    void (*mux_receive_mouse)(uint32_t x, uint32_t y, uint32_t flags);</div>
+<div class="line">} <a class="code" href="common_8h.html#a45e4b8c7b0b2aff4b3e82ade516e2ede">InputEventCallbacks</a>;</div>
 </div><!-- fragment --><p>Hopefully this looks pretty self-explanatory. Further information is available in the Doxygen documentation.</p>
 <h4>Outbound Communication</h4>
 <p>Outbound communication functions are used to transfer information and state from the hypervisor to the library for transmission to the RDPMux server. Currently the library supports sending framebuffer changes and startup/shutdown messages. As the feature set grows, expect more functions to be added in the future. Currently, the functions are:</p>
 <ol type="1">
-<li><code><a class="el" href="shim_8c.html#aa13fef43632c4a7c7f2118c6c893b335">shim_display_update()</a></code> is meant to be called when a region of the framebuffer updates</li>
-<li><code><a class="el" href="shim_8c.html#a178f928d9551cd134012ad32d21976a6">shim_display_refresh()</a></code> is meant to be called every time the virtual display refreshes.</li>
-<li><code><a class="el" href="shim_8c.html#ad300e030d42d8d266d761cdaec47f832">shim_display_switch()</a></code> is meant to be called when the framebuffer changes is a big way: subpixel layout change, resolution change, etc.</li>
+<li><code><a class="el" href="rdpmux_8c.html#abca5c99994f168c159ce63cc2bf6ca07">mux_display_update()</a></code> is meant to be called when a region of the framebuffer updates</li>
+<li><code><a class="el" href="rdpmux_8c.html#a7bb243d6234dacee4dceec101b7c1db4">mux_display_refresh()</a></code> is meant to be called every time the virtual display refreshes.</li>
+<li><code><a class="el" href="rdpmux_8c.html#a10c939e82864d15adb49c7c536ce9962">mux_display_switch()</a></code> is meant to be called when the framebuffer changes is a big way: subpixel layout change, resolution change, etc.</li>
 </ol>
 <h3>Quickstart</h3>
 <h4>Library Initialization</h4>
-<p>First, initialize the library's data structures by calling <code><a class="el" href="shim_8c.html#a9c6674cfc4d057c29da621992888b6ae">shim_init_display_struct()</a></code>. This sets up all the internal data structures, but doesn't start anything up yet. This function returns a pointer to the main display struct set up by the library for its internal usage. You can choose to keep it around, though that provides very little advantage currently.</p>
+<p>First, initialize the library's data structures by calling <code><a class="el" href="rdpmux_8c.html#ac834204be0cd580a03cf96d08db55365">mux_init_display_struct()</a></code>. This sets up all the internal data structures, but doesn't start anything up yet. This function returns a pointer to the main display struct set up by the library for its internal usage. You can choose to keep it around, though that provides very little advantage currently.</p>
 <h4>Service Registration</h4>
-<p>Registration and initialization of the communications portion of the library is done in two parts. You first get your socket path from the RDPMux server by calling <code><a class="el" href="dbus_8c.html#ae0abe3e1c326ae64034b5b2660c4358d" title="Gets the socket path from the DBus service passed in. ">shim_get_socket_path()</a></code>. This gives you a file path to the private Nanomsg socket used for communication with your VM's personal RDP server.</p>
-<p>Next, you want to call <code><a class="el" href="nanomsg_8c.html#a593e2f1004967bd9579626706a4a194c" title="Connects to the nanomsg socket on path. ">shim_connect()</a></code> to actually connect to the Nanomsg socket.</p>
+<p>Registration and initialization of the communications portion of the library is done in two parts. You first get your socket path from the RDPMux server by calling <code><a class="el" href="dbus_8c.html#ad5fe4fea41ad5ccc75d8799c6b6c96e2" title="Gets the socket path from the DBus service passed in. ">mux_get_socket_path()</a></code>. This gives you a file path to the private Nanomsg socket used for communication with your VM's personal RDP server.</p>
+<p>Next, you want to call <code><a class="el" href="nanomsg_8c.html#ad36b0b71c7159fa4eaf19866cfd09fcb" title="Connects to the nanomsg socket on path. ">mux_connect()</a></code> to actually connect to the Nanomsg socket.</p>
 <h4>Register Callback Functions</h4>
-<p>Mouse and keyboard events are delivered to the backend service via callback functions set via <code><a class="el" href="shim_8c.html#ad5aa06f95ae540a05b0117bd70de7feb">shim_register_event_callbacks()</a></code>. The caller needs to create their own callback functions to handle incoming mouse and keyboard events, and pass them in via an <code><a class="el" href="structEventCallbacks.html" title="This struct is populated by the code using the library to provide callbacks for mouse and keyboard ev...">EventCallbacks</a></code> struct.</p>
+<p>Mouse and keyboard events are delivered to the backend service via callback functions set via <code><a class="el" href="rdpmux_8c.html#a2bd7ec31ed5cd38889c7b99fe2f3cf05">mux_register_event_callbacks()</a></code>. The caller needs to create their own callback functions to handle incoming mouse and keyboard events, and pass them in via an <code><a class="el" href="structInputEventCallbacks.html" title="This struct is populated by the code using the library to provide callbacks for mouse and keyboard ev...">InputEventCallbacks</a></code> struct.</p>
 <h4>Starting the loops</h4>
-<p>To actually start the library's functionality, you need to spin up the three loop functions. These are: <code><a class="el" href="shim_8c.html#ab198b5d9a5378234fdc3aa55dbccc37f">shim_mainloop()</a></code>, <code><a class="el" href="shim_8c.html#abe21d95e2d23dd8d791e940decaed431">shim_out_loop()</a></code>, and <code><a class="el" href="shim_8c.html#ad2d5acae095242a3b431558a872b1017">shim_display_buffer_update_loop()</a></code>. As a caveat: these functions all contain infinite loops that block until they are needed. If you see that one of these loops is using 100% CPU, chances are you missed one of the steps above. libshim Once you start these three loops up, the library will be fully operational and should require no other babysitting.</p>
+<p>To actually start the library's functionality, you need to spin up the three loop functions. These are: <code><a class="el" href="rdpmux_8c.html#a3ea6540759976fee25256d277b997463">mux_mainloop()</a></code>, <code><a class="el" href="rdpmux_8c.html#a511f492674d105405d02ecc3ea4894db">mux_out_loop()</a></code>, and <code><a class="el" href="rdpmux_8c.html#a5fb9aa442377cc4ed01a30f0ce2fc888">mux_display_buffer_update_loop()</a></code>. As a caveat: these functions all contain infinite loops that block until they are needed. If you see that one of these loops is using 100% CPU, chances are you missed one of the steps above. Once you start these three loops up, the library will be fully operational and should require no other babysitting.</p>
 <h2>Protocol</h2>
 <p>RDPMux uses DBus for service registration, and Msgpack-encoded messages over a private socket for service communication.</p>
 <h3>DBus Registration</h3>

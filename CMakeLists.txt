@@ -1,8 +1,8 @@
-cmake_minimum_required(VERSION 3.3)
+cmake_minimum_required(VERSION 3.2)
 project(rdpmux C)
 
 set(MAJOR_VERSION 0)
-set(MINOR_VERSION 1)
+set(MINOR_VERSION 2)
 set(PATCH_VERSION 0)
 set(MUX_VERSION "${MAJOR_VERSION}.${MINOR_VERSION}.${PATCH_VERSION}")
 
@@ -11,7 +11,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 set(GENERAL_WARNING_FLAGS "-Wall -Werror -Wno-unused-variable -Wno-unused-function")
 set(GENERAL_DEBUG_FLAGS "-g3 -O0 -fvar-tracking-assignments")
 set(GENERAL_RELEASE_FLAGS "-mtune=native -O2 -fomit-frame-pointer")
-set(GENERAL_COMPILER_FLAGS "-pipe -fstack-protector-strong --param=ssp-buffer-size=4 -fvisibility=hidden")
+set(GENERAL_COMPILER_FLAGS "-pipe -fstack-protector-strong --param=ssp-buffer-size=4 -fvisibility=hidden -Wl,--exclude-libs,ALL")
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${GENERAL_WARNING_FLAGS} ${GENERAL_COMPILER_FLAGS}")
 set(CMAKE_C_FLAGS_DEBUG "${GENERAL_DEBUG_FLAGS}")
@@ -32,7 +32,7 @@ install(TARGETS
         )
 
 install(FILES
-        "${CMAKE_CURRENT_SOURCE_DIR}/include/shim.h" DESTINATION "${CMAKE_INSTALL_FULL_INCLUDEDIR}")
+        "${CMAKE_CURRENT_SOURCE_DIR}/include/rdpmux.h" DESTINATION "${CMAKE_INSTALL_FULL_INCLUDEDIR}")
 install(FILES
         "${CMAKE_CURRENT_SOURCE_DIR}/librdpmux.pc" DESTINATION "${CMAKE_INSTALL_FULL_LIBDIR}/pkgconfig")
 

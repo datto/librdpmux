@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.10"/>
-<title>librdpmux: ShimUpdate Struct Reference</title>
+<title>librdpmux: InputEventCallbacks Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -32,9 +32,9 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">librdpmux
-   &#160;<span id="projectnumber">0.1.0</span>
+   &#160;<span id="projectnumber">0.2.0</span>
    </div>
-   <div id="projectbrief">Library to provide low-level QEMU guest interaction capabilties outside the hypervisor.</div>
+   <div id="projectbrief">Library to provide low-level hypervisor guest interaction capabilties outside the hypervisor.</div>
   </td>
  </tr>
  </tbody>
@@ -88,7 +88,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   </div>
 </div>
 <script type="text/javascript">
-$(document).ready(function(){initNavTree('structShimUpdate.html','');});
+$(document).ready(function(){initNavTree('structInputEventCallbacks.html','');});
 </script>
 <div id="doc-content">
 <!-- window showing the filter options -->
@@ -107,56 +107,31 @@ $(document).ready(function(){initNavTree('structShimUpdate.html','');});
 
 <div class="header">
   <div class="summary">
-<a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Data Fields</a>  </div>
   <div class="headertitle">
-<div class="title">ShimUpdate Struct Reference</div>  </div>
+<div class="title">InputEventCallbacks Struct Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 
-<p>Object to hold information about the various types of events.  
- <a href="structShimUpdate.html#details">More...</a></p>
+<p>This struct is populated by the code using the library to provide callbacks for mouse and keyboard events.  
+ <a href="structInputEventCallbacks.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="common_8h_source.html">common.h</a>&gt;</code></p>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
-Public Member Functions</h2></td></tr>
-<tr class="memitem:ae2b4c1c764b214fbf297726abd1a3036"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae2b4c1c764b214fbf297726abd1a3036"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structShimUpdate.html#ae2b4c1c764b214fbf297726abd1a3036">SIMPLEQ_ENTRY</a> (<a class="el" href="structShimUpdate.html">ShimUpdate</a>) next</td></tr>
-<tr class="memdesc:ae2b4c1c764b214fbf297726abd1a3036"><td class="mdescLeft">&#160;</td><td class="mdescRight">pointer to next update in queue. <br /></td></tr>
-<tr class="separator:ae2b4c1c764b214fbf297726abd1a3036"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Data Fields</h2></td></tr>
-<tr class="memitem:a56f4d6a5e1dfe2e02ae24626d753ff3e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a56f4d6a5e1dfe2e02ae24626d753ff3e"></a>
-<a class="el" href="common_8h.html#a6be77e7dd97242cf9baf0a7388f43d67">MessageType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structShimUpdate.html#a56f4d6a5e1dfe2e02ae24626d753ff3e">type</a></td></tr>
-<tr class="memdesc:a56f4d6a5e1dfe2e02ae24626d753ff3e"><td class="mdescLeft">&#160;</td><td class="mdescRight">what kind of update this is. <br /></td></tr>
-<tr class="separator:a56f4d6a5e1dfe2e02ae24626d753ff3e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afa809593da1ed4996bd3baa498f2cf44"><td class="memItemLeft" ><a class="anchor" id="afa809593da1ed4996bd3baa498f2cf44"></a>
-union {</td></tr>
-<tr class="memitem:ad2d269efef9640ca463fcf6e78ab757e"><td class="memItemLeft" >
-&#160;&#160;&#160;<a class="el" href="structdisplay__update.html">display_update</a>&#160;&#160;&#160;<b>disp_update</b></td></tr>
-<tr class="separator:ad2d269efef9640ca463fcf6e78ab757e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a24a42ba0168094a86b53b2fa5188dace"><td class="memItemLeft" >
-&#160;&#160;&#160;<a class="el" href="structdisplay__switch.html">display_switch</a>&#160;&#160;&#160;<b>disp_switch</b></td></tr>
-<tr class="separator:a24a42ba0168094a86b53b2fa5188dace"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aaa1492ba979d4e5b339cf71fb48dcd73"><td class="memItemLeft" >
-&#160;&#160;&#160;<a class="el" href="structkb__update.html">kb_update</a>&#160;&#160;&#160;<b>kb</b></td></tr>
-<tr class="separator:aaa1492ba979d4e5b339cf71fb48dcd73"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a66ac25101c4bf646fefa7f36354cceed"><td class="memItemLeft" >
-&#160;&#160;&#160;<a class="el" href="structmouse__update.html">mouse_update</a>&#160;&#160;&#160;<b>mouse</b></td></tr>
-<tr class="separator:a66ac25101c4bf646fefa7f36354cceed"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad302c82792bcf722a37fcdd8777174aa"><td class="memItemLeft" >
-&#160;&#160;&#160;<a class="el" href="structupdate__ack.html">update_ack</a>&#160;&#160;&#160;<b>ack</b></td></tr>
-<tr class="separator:ad302c82792bcf722a37fcdd8777174aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afa809593da1ed4996bd3baa498f2cf44"><td class="memItemLeft" valign="top">};&#160;</td><td class="memItemRight" valign="bottom"></td></tr>
-<tr class="memdesc:afa809593da1ed4996bd3baa498f2cf44"><td class="mdescLeft">&#160;</td><td class="mdescRight">union of the various event types. <br /></td></tr>
-<tr class="separator:afa809593da1ed4996bd3baa498f2cf44"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adff8d362fc7b1e1e67f97093aa93c653"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adff8d362fc7b1e1e67f97093aa93c653"></a>
+void(*&#160;</td><td class="memItemRight" valign="bottom"><b>mux_receive_kb</b> )(uint32_t keycode, uint32_t flags)</td></tr>
+<tr class="separator:adff8d362fc7b1e1e67f97093aa93c653"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad4dc0c0afab0f2f55e8447d1585b73f0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad4dc0c0afab0f2f55e8447d1585b73f0"></a>
+void(*&#160;</td><td class="memItemRight" valign="bottom"><b>mux_receive_mouse</b> )(uint32_t x, uint32_t y, uint32_t flags)</td></tr>
+<tr class="separator:ad4dc0c0afab0f2f55e8447d1585b73f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Object to hold information about the various types of events. </p>
-<p>The <a class="el" href="structShimUpdate.html" title="Object to hold information about the various types of events. ">ShimUpdate</a> struct can can hold exactly one of one type of event. They are designed to be held in queues. Use the type field to determine what sort of event it is, rather than any other sort of hackery. </p>
-</div><hr/>The documentation for this struct was generated from the following file:<ul>
+<div class="textblock"><p>This struct is populated by the code using the library to provide callbacks for mouse and keyboard events. </p>
+<p>This struct is also exposed in the public header. The implementing code (usually the hypervisor) needs to provide functions to deal with these events and register them into the library using <a class="el" href="rdpmux_8c.html#a2bd7ec31ed5cd38889c7b99fe2f3cf05">mux_register_event_callbacks()</a>. </p>
+</div><hr/>The documentation for this struct was generated from the following files:<ul>
+<li>include/<a class="el" href="rdpmux_8h_source.html">rdpmux.h</a></li>
 <li>src/<a class="el" href="common_8h_source.html">common.h</a></li>
 </ul>
 </div><!-- contents -->
@@ -164,7 +139,7 @@ union {</td></tr>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="structShimUpdate.html">ShimUpdate</a></li>
+    <li class="navelem"><a class="el" href="structInputEventCallbacks.html">InputEventCallbacks</a></li>
     <li class="footer">Generated by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>

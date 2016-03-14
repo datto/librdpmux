@@ -7,7 +7,7 @@
  * @returns Whether the queue is empty.
  * @param q The queue to check.
  */
-static bool shim_queue_check_is_empty(ShimMsgQueue *q)
+static bool mux_queue_check_is_empty(MuxMsgQueue *q)
 {
     return SIMPLEQ_EMPTY(&q->updates);
 }
@@ -18,14 +18,14 @@ static bool shim_queue_check_is_empty(ShimMsgQueue *q)
  * @returns Pointer to the update.
  * @param q The queue to dequeue from.
  */
-void *shim_queue_dequeue(ShimMsgQueue *q)
+void *mux_queue_dequeue(MuxMsgQueue *q)
 {
     //printf("LIBSHIM: Waiting on update now!\n");
     void *ret;
     // take lock on the mutex
     pthread_mutex_lock(&q->lock);
     // while the queue is empty, wait
-    while (shim_queue_check_is_empty(q)) {
+    while (mux_queue_check_is_empty(q)) {
         pthread_cond_wait(&q->cond, &q->lock);
     }
     // remove the head of the queue
@@ -44,7 +44,7 @@ void *shim_queue_dequeue(ShimMsgQueue *q)
  * @param q The queue to stick the update on.
  * @param update The update to stick on the queue.
  */
-void shim_queue_enqueue(ShimMsgQueue *q, ShimUpdate *update)
+void mux_queue_enqueue(MuxMsgQueue *q, MuxUpdate *update)
 {
     //printf("LIBSHIM: Enqueueing update now!\n");
     pthread_mutex_lock(&q->lock);
@@ -58,13 +58,13 @@ void shim_queue_enqueue(ShimMsgQueue *q, ShimUpdate *update)
  *
  * @param q The queue to clear.
  */
-void shim_queue_clear(ShimMsgQueue *q)
+void mux_queue_clear(MuxMsgQueue *q)
 {
     //printf("LIBSHIM: Clearing queue now\n");
-    ShimUpdate *update;
+    MuxUpdate *update;
     pthread_mutex_lock(&q->lock);
     while ((update = SIMPLEQ_FIRST(&q->updates)) != NULL) {
-        SIMPLEQ_REMOVE(&q->updates, update, ShimUpdate, next);
+        SIMPLEQ_REMOVE(&q->updates, update, MuxUpdate, next);
         g_free(update);
     }
     pthread_mutex_unlock(&q->lock);

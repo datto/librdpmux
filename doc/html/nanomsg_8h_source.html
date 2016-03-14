@@ -32,9 +32,9 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">librdpmux
-   &#160;<span id="projectnumber">0.1.0</span>
+   &#160;<span id="projectnumber">0.2.0</span>
    </div>
-   <div id="projectbrief">Library to provide low-level QEMU guest interaction capabilties outside the hypervisor.</div>
+   <div id="projectbrief">Library to provide low-level hypervisor guest interaction capabilties outside the hypervisor.</div>
   </td>
  </tr>
  </tbody>
@@ -120,17 +120,15 @@ $(document).ready(function(){initNavTree('nanomsg_8h_source.html','');});
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &lt;nanomsg/nn.h&gt;</span></div>
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &lt;nanomsg/pair.h&gt;</span></div>
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;</div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="comment">//void shim_process_incoming_msg(void *buf, int nbytes);</span></div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="comment">//size_t shim_write_outgoing_msg(ShimUpdate *update, nnStr *msg);</span></div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="keywordtype">int</span> <a class="code" href="nanomsg_8c.html#a895bd8fd7f6e970d26b8f8817863ae8b">shim_nn_recv_msg</a>(<span class="keywordtype">int</span> sock, <span class="keywordtype">void</span> **buf);</div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="keywordtype">int</span> <a class="code" href="nanomsg_8c.html#a258144d13768f139814ff3f1535578ab">shim_nn_send_msg</a>(<span class="keywordtype">int</span> sock, <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> len);</div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="keywordtype">bool</span> <a class="code" href="nanomsg_8c.html#a593e2f1004967bd9579626706a4a194c">shim_connect</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *path);</div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;</div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="preprocessor">#endif //SHIM_NANOMSG_H</span></div>
-<div class="ttc" id="nanomsg_8c_html_a895bd8fd7f6e970d26b8f8817863ae8b"><div class="ttname"><a href="nanomsg_8c.html#a895bd8fd7f6e970d26b8f8817863ae8b">shim_nn_recv_msg</a></div><div class="ttdeci">int shim_nn_recv_msg(int sock, void **buf)</div><div class="ttdoc">Receives data through the given nanomsg socket and sticks it into buf. </div><div class="ttdef"><b>Definition:</b> nanomsg.c:14</div></div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="keywordtype">int</span> <a class="code" href="nanomsg_8c.html#a9f97b8b18b913e3a6db191776cf460ab">mux_nn_recv_msg</a>(<span class="keywordtype">int</span> sock, <span class="keywordtype">void</span> **buf);</div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="keywordtype">int</span> <a class="code" href="nanomsg_8c.html#a940d421175a39f3a65b4e63372cf85cb">mux_nn_send_msg</a>(<span class="keywordtype">int</span> sock, <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> len);</div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="keywordtype">bool</span> <a class="code" href="nanomsg_8c.html#ad36b0b71c7159fa4eaf19866cfd09fcb">mux_connect</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *path);</div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;</div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="preprocessor">#endif //SHIM_NANOMSG_H</span></div>
+<div class="ttc" id="nanomsg_8c_html_a9f97b8b18b913e3a6db191776cf460ab"><div class="ttname"><a href="nanomsg_8c.html#a9f97b8b18b913e3a6db191776cf460ab">mux_nn_recv_msg</a></div><div class="ttdeci">int mux_nn_recv_msg(int sock, void **buf)</div><div class="ttdoc">Receives data through the given nanomsg socket and sticks it into buf. </div><div class="ttdef"><b>Definition:</b> nanomsg.c:14</div></div>
+<div class="ttc" id="nanomsg_8c_html_a940d421175a39f3a65b4e63372cf85cb"><div class="ttname"><a href="nanomsg_8c.html#a940d421175a39f3a65b4e63372cf85cb">mux_nn_send_msg</a></div><div class="ttdeci">int mux_nn_send_msg(int sock, void *buf, size_t len)</div><div class="ttdoc">Send a message through the nanomsg socket. </div><div class="ttdef"><b>Definition:</b> nanomsg.c:41</div></div>
 <div class="ttc" id="common_8h_html"><div class="ttname"><a href="common_8h.html">common.h</a></div></div>
-<div class="ttc" id="nanomsg_8c_html_a593e2f1004967bd9579626706a4a194c"><div class="ttname"><a href="nanomsg_8c.html#a593e2f1004967bd9579626706a4a194c">shim_connect</a></div><div class="ttdeci">__PUBLIC bool shim_connect(const char *path)</div><div class="ttdoc">Connects to the nanomsg socket on path. </div><div class="ttdef"><b>Definition:</b> nanomsg.c:58</div></div>
-<div class="ttc" id="nanomsg_8c_html_a258144d13768f139814ff3f1535578ab"><div class="ttname"><a href="nanomsg_8c.html#a258144d13768f139814ff3f1535578ab">shim_nn_send_msg</a></div><div class="ttdeci">int shim_nn_send_msg(int sock, void *buf, size_t len)</div><div class="ttdoc">Send a message through the nanomsg socket. </div><div class="ttdef"><b>Definition:</b> nanomsg.c:41</div></div>
+<div class="ttc" id="nanomsg_8c_html_ad36b0b71c7159fa4eaf19866cfd09fcb"><div class="ttname"><a href="nanomsg_8c.html#ad36b0b71c7159fa4eaf19866cfd09fcb">mux_connect</a></div><div class="ttdeci">__PUBLIC bool mux_connect(const char *path)</div><div class="ttdoc">Connects to the nanomsg socket on path. </div><div class="ttdef"><b>Definition:</b> nanomsg.c:58</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

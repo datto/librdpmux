@@ -32,9 +32,9 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">librdpmux
-   &#160;<span id="projectnumber">0.1.0</span>
+   &#160;<span id="projectnumber">0.2.0</span>
    </div>
-   <div id="projectbrief">Library to provide low-level QEMU guest interaction capabilties outside the hypervisor.</div>
+   <div id="projectbrief">Library to provide low-level hypervisor guest interaction capabilties outside the hypervisor.</div>
   </td>
  </tr>
  </tbody>
@@ -115,23 +115,23 @@ $(document).ready(function(){initNavTree('nanomsg_8c.html','');});
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a895bd8fd7f6e970d26b8f8817863ae8b"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nanomsg_8c.html#a895bd8fd7f6e970d26b8f8817863ae8b">shim_nn_recv_msg</a> (int sock, void **buf)</td></tr>
-<tr class="memdesc:a895bd8fd7f6e970d26b8f8817863ae8b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Receives data through the given nanomsg socket and sticks it into buf.  <a href="#a895bd8fd7f6e970d26b8f8817863ae8b">More...</a><br /></td></tr>
-<tr class="separator:a895bd8fd7f6e970d26b8f8817863ae8b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a258144d13768f139814ff3f1535578ab"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nanomsg_8c.html#a258144d13768f139814ff3f1535578ab">shim_nn_send_msg</a> (int sock, void *buf, size_t len)</td></tr>
-<tr class="memdesc:a258144d13768f139814ff3f1535578ab"><td class="mdescLeft">&#160;</td><td class="mdescRight">Send a message through the nanomsg socket.  <a href="#a258144d13768f139814ff3f1535578ab">More...</a><br /></td></tr>
-<tr class="separator:a258144d13768f139814ff3f1535578ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a593e2f1004967bd9579626706a4a194c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="common_8h.html#a0a48b3e9e9d7b38a544028be1ea4b2fa">__PUBLIC</a> bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nanomsg_8c.html#a593e2f1004967bd9579626706a4a194c">shim_connect</a> (const char *path)</td></tr>
-<tr class="memdesc:a593e2f1004967bd9579626706a4a194c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Connects to the nanomsg socket on path.  <a href="#a593e2f1004967bd9579626706a4a194c">More...</a><br /></td></tr>
-<tr class="separator:a593e2f1004967bd9579626706a4a194c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9f97b8b18b913e3a6db191776cf460ab"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nanomsg_8c.html#a9f97b8b18b913e3a6db191776cf460ab">mux_nn_recv_msg</a> (int sock, void **buf)</td></tr>
+<tr class="memdesc:a9f97b8b18b913e3a6db191776cf460ab"><td class="mdescLeft">&#160;</td><td class="mdescRight">Receives data through the given nanomsg socket and sticks it into buf.  <a href="#a9f97b8b18b913e3a6db191776cf460ab">More...</a><br /></td></tr>
+<tr class="separator:a9f97b8b18b913e3a6db191776cf460ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a940d421175a39f3a65b4e63372cf85cb"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nanomsg_8c.html#a940d421175a39f3a65b4e63372cf85cb">mux_nn_send_msg</a> (int sock, void *buf, size_t len)</td></tr>
+<tr class="memdesc:a940d421175a39f3a65b4e63372cf85cb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Send a message through the nanomsg socket.  <a href="#a940d421175a39f3a65b4e63372cf85cb">More...</a><br /></td></tr>
+<tr class="separator:a940d421175a39f3a65b4e63372cf85cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad36b0b71c7159fa4eaf19866cfd09fcb"><td class="memItemLeft" align="right" valign="top"><a class="el" href="common_8h.html#a0a48b3e9e9d7b38a544028be1ea4b2fa">__PUBLIC</a> bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nanomsg_8c.html#ad36b0b71c7159fa4eaf19866cfd09fcb">mux_connect</a> (const char *path)</td></tr>
+<tr class="memdesc:ad36b0b71c7159fa4eaf19866cfd09fcb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Connects to the nanomsg socket on path.  <a href="#ad36b0b71c7159fa4eaf19866cfd09fcb">More...</a><br /></td></tr>
+<tr class="separator:ad36b0b71c7159fa4eaf19866cfd09fcb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function Documentation</h2>
-<a class="anchor" id="a593e2f1004967bd9579626706a4a194c"></a>
+<a class="anchor" id="ad36b0b71c7159fa4eaf19866cfd09fcb"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="common_8h.html#a0a48b3e9e9d7b38a544028be1ea4b2fa">__PUBLIC</a> bool shim_connect </td>
+          <td class="memname"><a class="el" href="common_8h.html#a0a48b3e9e9d7b38a544028be1ea4b2fa">__PUBLIC</a> bool mux_connect </td>
           <td>(</td>
           <td class="paramtype">const char *&#160;</td>
           <td class="paramname"><em>path</em></td><td>)</td>
@@ -152,12 +152,12 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="a895bd8fd7f6e970d26b8f8817863ae8b"></a>
+<a class="anchor" id="a9f97b8b18b913e3a6db191776cf460ab"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">int shim_nn_recv_msg </td>
+          <td class="memname">int mux_nn_recv_msg </td>
           <td>(</td>
           <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>sock</em>, </td>
@@ -189,12 +189,12 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="a258144d13768f139814ff3f1535578ab"></a>
+<a class="anchor" id="a940d421175a39f3a65b4e63372cf85cb"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">int shim_nn_send_msg </td>
+          <td class="memname">int mux_nn_send_msg </td>
           <td>(</td>
           <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>sock</em>, </td>

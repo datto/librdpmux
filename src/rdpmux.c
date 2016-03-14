@@ -9,8 +9,8 @@
 #include "nanomsg.h"
 #include "queue.h"
 
-EventCallbacks callbacks;
-ShimDisplay *display;
+InputEventCallbacks callbacks;
+MuxDisplay *display;
 
 /**
  * @func Copies the region of the framebuffer noted by the coordinates in the display update struct passed in to the
@@ -18,7 +18,7 @@ ShimDisplay *display;
  *
  * @param update The update to copy out. Should be verified by caller to be a DISPLAY_UPDATE struct.
  */
-static void shim_copy_update_to_shmem_region(ShimUpdate *update)
+static void mux_copy_update_to_shmem_region(MuxUpdate *update)
 {
     // in this function, we copy the update's dirty buffer to the new shmem
     // region and place the update on the outgoing queue for transmission. We
@@ -44,7 +44,7 @@ static void shim_copy_update_to_shmem_region(ShimUpdate *update)
     }
 
     // place the update on the outgoing queue
-    shim_queue_enqueue(&display->outgoing_messages, update);
+    mux_queue_enqueue(&display->outgoing_messages, update);
 
     // block on the signal.
     // TODO: ensure this works because I'm not sure if this is guaranteed to wake up properly.
@@ -67,7 +67,7 @@ static void shim_copy_update_to_shmem_region(ShimUpdate *update)
  * @param w The width of the new region to be included in the update.
  * @param h The height of the new region to be included in the update.
  */
-static void shim_expand_rect(ShimUpdate *update, int x, int y, int w, int h)
+static void mux_expand_rect(MuxUpdate *update, int x, int y, int w, int h)
 {
     //printf("DISPLAY: Checking to see if we need to expand bounding box from [(%d, %d) %dx%d]\n",
     //update->x, update->y, update->w, update->h);
@@ -107,12 +107,12 @@ static void shim_expand_rect(ShimUpdate *update, int x, int y, int w, int h)
  * @param w Width of the changed region, in px.
  * @param h Height of the changed region, in px.
  */
-__PUBLIC void shim_display_update(int x, int y, int w, int h)
+__PUBLIC void mux_display_update(int x, int y, int w, int h)
 {
     printf("LIBSHIM: DCL display update event triggered.\n");
-    ShimUpdate *update;
+    MuxUpdate *update;
     if (!display->dirty_update) {
-        update = g_malloc0(sizeof(ShimUpdate));
+        update = g_malloc0(sizeof(MuxUpdate));
         update->type = DISPLAY_UPDATE;
         update->disp_update.x = x;
         update->disp_update.y = y;
@@ -125,7 +125,7 @@ __PUBLIC void shim_display_update(int x, int y, int w, int h)
         if (update->type != DISPLAY_UPDATE) {
             return;
         }
-        shim_expand_rect(update, x, y, w, h);
+        mux_expand_rect(update, x, y, w, h);
     }
 
     //printf("DISPLAY: DCL display update event (%d, %d) %dx%d completed successfully.\n",
@@ -138,7 +138,7 @@ __PUBLIC void shim_display_update(int x, int y, int w, int h)
  *
  * @param surface The new framebuffer display surface.
  */
-__PUBLIC void shim_display_switch(pixman_image_t *surface)
+__PUBLIC void mux_display_switch(pixman_image_t *surface)
 {
     // This callback is fired whenever the dimensions of the display buffer
     // change in a user-facing noticeable way. In here, we create a new shared
@@ -200,7 +200,7 @@ __PUBLIC void shim_display_switch(pixman_image_t *surface)
     }
 
     // create the event update
-    ShimUpdate *update = g_malloc0(sizeof(ShimUpdate));
+    MuxUpdate *update = g_malloc0(sizeof(MuxUpdate));
     update->type = DISPLAY_SWITCH;
     update->disp_switch.shm_fd = display->shmem_fd;
     update->disp_switch.w = width;
@@ -209,8 +209,8 @@ __PUBLIC void shim_display_switch(pixman_image_t *surface)
 
     // clear the outgoing queues (all those old messages for the old display
     // are now totally invalid since we have a new display to work against)
-    shim_queue_clear(&display->outgoing_messages);
-    shim_queue_clear(&display->display_buffer_updates);
+    mux_queue_clear(&display->outgoing_messages);
+    mux_queue_clear(&display->display_buffer_updates);
 
     pthread_mutex_lock(&display->shm_lock);
     memcpy(display->shm_buffer, framebuf_data,
@@ -222,17 +222,17 @@ __PUBLIC void shim_display_switch(pixman_image_t *surface)
 
 
     // place our display switch update in the outgoing queue
-    shim_queue_enqueue(&display->outgoing_messages, update);
+    mux_queue_enqueue(&display->outgoing_messages, update);
     //printf("DISPLAY: DCL display switch callback completed successfully.\n");
 }
 
 /**
  * @func Public API function, to be called when the framebuffer display refreshes.
  */
-__PUBLIC void shim_display_refresh()
+__PUBLIC void mux_display_refresh()
 {
     if (display->dirty_update) {
-        shim_queue_enqueue(&display->display_buffer_updates, display->dirty_update);
+        mux_queue_enqueue(&display->display_buffer_updates, display->dirty_update);
         //printf("LIBSHIM: Refresh queued to RDP server process.\n");
         display->dirty_update = NULL;
     }
@@ -247,7 +247,7 @@ __PUBLIC void shim_display_refresh()
  * dispatched as a runnable inside a separate thread during library initialization. Its function prototype
  * matches what pthreads et al. expect.
  */
-__PUBLIC void shim_out_loop()
+__PUBLIC void mux_out_loop()
 {
     size_t len;
 
@@ -257,9 +257,9 @@ __PUBLIC void shim_out_loop()
         msg.buf = NULL;
         //buf = NULL;
         //printf("LIBSHIM: Dequeueing update in out loop now\n");
-        ShimUpdate *update = (ShimUpdate *) shim_queue_dequeue(&display->outgoing_messages); // blocks until something in queue
-        len = shim_write_outgoing_msg(update, &msg); // serialize update to buf
-        if (shim_nn_send_msg(display->nn_sock, msg.buf, len) < 0) {
+        MuxUpdate *update = (MuxUpdate *) mux_queue_dequeue(&display->outgoing_messages); // blocks until something in queue
+        len = mux_write_outgoing_msg(update, &msg); // serialize update to buf
+        if (mux_nn_send_msg(display->nn_sock, msg.buf, len) < 0) {
             printf("ERROR: Something went wrong in nn_send: %s\n", nn_strerror(nn_errno()));
         }
         g_free(update); // update is no longer needed, free it
@@ -274,7 +274,7 @@ __PUBLIC void shim_out_loop()
  *
  * @param arg Not at all used, just there to satisfy pthreads.
  */
-__PUBLIC void *shim_display_buffer_update_loop(void *arg)
+__PUBLIC void *mux_display_buffer_update_loop(void *arg)
 {
     printf("LIBSHIM: Reached shim display buffer update thread!\n");
     // init queue
@@ -282,9 +282,9 @@ __PUBLIC void *shim_display_buffer_update_loop(void *arg)
 
     while(1) {
         //printf("LIBSHIM: Dequeueing update in buffer update loop now\n");
-        ShimUpdate *update = (ShimUpdate *) shim_queue_dequeue(&display->display_buffer_updates);
+        MuxUpdate *update = (MuxUpdate *) mux_queue_dequeue(&display->display_buffer_updates);
         if (update->type == DISPLAY_UPDATE) {
-            shim_copy_update_to_shmem_region(update); // will block until we receive ack
+            mux_copy_update_to_shmem_region(update); // will block until we receive ack
         } else {
             printf("ERROR: Wrong type of update queued on outgoing updates queue\n");
         }
@@ -299,7 +299,7 @@ __PUBLIC void *shim_display_buffer_update_loop(void *arg)
  *
  * @param arg void pointer to anything. Not used by the function in any way, just there to satisfy pthreads.
  */
-__PUBLIC void *shim_mainloop(void *arg)
+__PUBLIC void *mux_mainloop(void *arg)
 {
     //printf("LIBSHIM: Reached qemu shim in loop thread!\n");
     void *buf;
@@ -311,11 +311,11 @@ __PUBLIC void *shim_mainloop(void *arg)
     int nbytes;
     while(1) {
         buf = NULL;
-        nbytes = shim_nn_recv_msg(display->nn_sock, &buf);
+        nbytes = mux_nn_recv_msg(display->nn_sock, &buf);
         if (nbytes > 0) {
             // successful recv is successful
             //printf("NANOMSG: We have received a message of size %d bytes!\n", nbytes);
-            shim_process_incoming_msg(buf, nbytes);
+            mux_process_incoming_msg(buf, nbytes);
         }
     }
     return NULL;
@@ -326,7 +326,7 @@ __PUBLIC void *shim_mainloop(void *arg)
  *
  * @param q The queue to initialize.
  */
-static void shim_init_queue(ShimMsgQueue *q)
+static void mux_init_queue(MuxMsgQueue *q)
 {
     //printf("LIBSHIM: Now initializing a queue!\n");
     SIMPLEQ_INIT(&q->updates);
@@ -338,18 +338,18 @@ static void shim_init_queue(ShimMsgQueue *q)
  * @func This function initializes the data structures used by the library. It also returns a pointer to the ShimDisplay
  * struct initialized, which is defined as an opaque type in the public header so that client code can't mess with it.
  */
-__PUBLIC ShimDisplay *shim_init_display_struct()
+__PUBLIC MuxDisplay *mux_init_display_struct()
 {
     //printf("LIBSHIM: Now initializing display struct!\n");
-    display = g_malloc0(sizeof(ShimDisplay));
+    display = g_malloc0(sizeof(MuxDisplay));
     display->shmem_fd = -1;
     display->dirty_update = NULL;
 
     pthread_cond_init(&display->shm_cond, NULL);
     pthread_mutex_init(&display->shm_lock, NULL);
 
-    shim_init_queue(&display->outgoing_messages);
-    shim_init_queue(&display->display_buffer_updates);
+    mux_init_queue(&display->outgoing_messages);
+    mux_init_queue(&display->display_buffer_updates);
 
     return display;
 }
@@ -358,7 +358,7 @@ __PUBLIC ShimDisplay *shim_init_display_struct()
  * @func Register mouse and keyboard event callbacks using this function. The function pointers you register will be
  * called when mouse and keyboard events are received for you to handle and process.
  */
-__PUBLIC void shim_register_event_callbacks(EventCallbacks cb)
+__PUBLIC void mux_register_event_callbacks(InputEventCallbacks cb)
 {
     callbacks = cb;
 }

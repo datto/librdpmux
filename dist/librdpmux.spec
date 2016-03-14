@@ -1,11 +1,11 @@
 Name:           librdpmux
-Version:        0.1.0
+Version:        0.2.0
 Release:        1%{?dist}
 Summary:        Library to provide low-level VM guest interaction capabilties outside the hypervisor.
 License:        MIT
 URL:            http://github-server.datto.lan/sramanujam/librdpmux
 
-Source0:        libshim.tar.gz
+Source0:        librdpmux.tar.gz
 
 BuildRequires:  cmake >= 3.4
 BuildRequires:  nanomsg0.6-devel
@@ -25,7 +25,7 @@ Requires:       pkgconfig
 The %{name}-devel package contains configuration and header files for developing applications that use %{name}.
 
 %prep
-%setup -qn libshim
+%setup -qn librdpmux
 
 %build
 %cmake .

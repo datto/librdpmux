@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.10"/>
-<title>librdpmux: ShimMsgQueue Struct Reference</title>
+<title>librdpmux: MuxMsgQueue Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -32,9 +32,9 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">librdpmux
-   &#160;<span id="projectnumber">0.1.0</span>
+   &#160;<span id="projectnumber">0.2.0</span>
    </div>
-   <div id="projectbrief">Library to provide low-level QEMU guest interaction capabilties outside the hypervisor.</div>
+   <div id="projectbrief">Library to provide low-level hypervisor guest interaction capabilties outside the hypervisor.</div>
   </td>
  </tr>
  </tbody>
@@ -88,7 +88,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   </div>
 </div>
 <script type="text/javascript">
-$(document).ready(function(){initNavTree('structShimMsgQueue.html','');});
+$(document).ready(function(){initNavTree('structMuxMsgQueue.html','');});
 </script>
 <div id="doc-content">
 <!-- window showing the filter options -->
@@ -110,32 +110,32 @@ $(document).ready(function(){initNavTree('structShimMsgQueue.html','');});
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Data Fields</a>  </div>
   <div class="headertitle">
-<div class="title">ShimMsgQueue Struct Reference</div>  </div>
+<div class="title">MuxMsgQueue Struct Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 
-<p>queue to hold <a class="el" href="structShimUpdate.html" title="Object to hold information about the various types of events. ">ShimUpdate</a> objects.  
- <a href="structShimMsgQueue.html#details">More...</a></p>
+<p>queue to hold ShimUpdate objects.  
+ <a href="structMuxMsgQueue.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="common_8h_source.html">common.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:aff3c66c2ca5eee25538ccc7edfcc03c2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aff3c66c2ca5eee25538ccc7edfcc03c2"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>SIMPLEQ_HEAD</b> (, <a class="el" href="structShimUpdate.html">ShimUpdate</a>) updates</td></tr>
-<tr class="separator:aff3c66c2ca5eee25538ccc7edfcc03c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a16b37c5f715f4b94dad740667d1cc414"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a16b37c5f715f4b94dad740667d1cc414"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>SIMPLEQ_HEAD</b> (, <a class="el" href="structMuxUpdate.html">MuxUpdate</a>) updates</td></tr>
+<tr class="separator:a16b37c5f715f4b94dad740667d1cc414"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Data Fields</h2></td></tr>
-<tr class="memitem:a8bf6d0aa97c6ae1bfcfb4544aeadfdbf"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8bf6d0aa97c6ae1bfcfb4544aeadfdbf"></a>
+<tr class="memitem:a98f070868dc95ef781f688ab180ea0a1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a98f070868dc95ef781f688ab180ea0a1"></a>
 pthread_mutex_t&#160;</td><td class="memItemRight" valign="bottom"><b>lock</b></td></tr>
-<tr class="separator:a8bf6d0aa97c6ae1bfcfb4544aeadfdbf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6eeb15f1d319486231c45c50eee4630a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6eeb15f1d319486231c45c50eee4630a"></a>
+<tr class="separator:a98f070868dc95ef781f688ab180ea0a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abfe230543f1dfb13528ab4b9a8abf30d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abfe230543f1dfb13528ab4b9a8abf30d"></a>
 pthread_cond_t&#160;</td><td class="memItemRight" valign="bottom"><b>cond</b></td></tr>
-<tr class="separator:a6eeb15f1d319486231c45c50eee4630a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:abfe230543f1dfb13528ab4b9a8abf30d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>queue to hold <a class="el" href="structShimUpdate.html" title="Object to hold information about the various types of events. ">ShimUpdate</a> objects. </p>
+<div class="textblock"><p>queue to hold ShimUpdate objects. </p>
 <p>This is a very simple queue backed by a linked list. Nothing fancy, gets the job done. </p>
 </div><hr/>The documentation for this struct was generated from the following file:<ul>
 <li>src/<a class="el" href="common_8h_source.html">common.h</a></li>
@@ -145,7 +145,7 @@ pthread_cond_t&#160;</td><td class="memItemRight" valign="bottom"><b>cond</b></t
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="structShimMsgQueue.html">ShimMsgQueue</a></li>
+    <li class="navelem"><a class="el" href="structMuxMsgQueue.html">MuxMsgQueue</a></li>
     <li class="footer">Generated by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.10 </li>

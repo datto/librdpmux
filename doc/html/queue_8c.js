@@ -1,6 +1,6 @@
 var queue_8c =
 [
-    [ "shim_queue_clear", "queue_8c.html#a281fd7922a409a490f03185f5dddf9bb", null ],
-    [ "shim_queue_dequeue", "queue_8c.html#a16453cd81534e73913d5278dd4ed963e", null ],
-    [ "shim_queue_enqueue", "queue_8c.html#a91e0506960ee03e642e8c0be647b0988", null ]
+    [ "mux_queue_clear", "queue_8c.html#ad6b2e0b7e34c081cb3e7a937ee51cb57", null ],
+    [ "mux_queue_dequeue", "queue_8c.html#af55682d0adb913312be5a7a4d5a5de82", null ],
+    [ "mux_queue_enqueue", "queue_8c.html#ae70da87aa1808776b77bcecda14162ca", null ]
 ];

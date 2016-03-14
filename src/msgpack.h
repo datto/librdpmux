@@ -17,7 +17,7 @@ typedef struct nn_str {
     int pos; // current read position in buffer
 } nnStr;
 
-size_t shim_write_outgoing_msg(ShimUpdate *update, nnStr *msg);
-void shim_process_incoming_msg(void *buf, int nbytes);
+size_t mux_write_outgoing_msg(MuxUpdate *update, nnStr *msg);
+void mux_process_incoming_msg(void *buf, int nbytes);
 
 #endif //SHIM_MSGPACK_H

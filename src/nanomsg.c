@@ -11,7 +11,7 @@
  * @param sock The nanomsg socket to block on.
  * @param buf Pointer to a void* buffer.
  */
-int shim_nn_recv_msg(int sock, void **buf)
+int mux_nn_recv_msg(int sock, void **buf)
 {
     int num = nn_recv(sock, buf, NN_MSG, 0);
     if (num < 0) {
@@ -38,7 +38,7 @@ int shim_nn_recv_msg(int sock, void **buf)
  * @param buf The data to send.
  * @param len The length of buf.
  */
-int shim_nn_send_msg(int sock, void *buf, size_t len)
+int mux_nn_send_msg(int sock, void *buf, size_t len)
 {
     assert(buf != NULL);
     //printf("LIBSHIM: Sending message through nn sock now!\n");
@@ -55,7 +55,7 @@ int shim_nn_send_msg(int sock, void *buf, size_t len)
  *
  * @param path The path to the nanomsg socket in the filesystem.
  */
-__PUBLIC bool shim_connect(const char *path)
+__PUBLIC bool mux_connect(const char *path)
 {
     int to = 10000;
     int sock = nn_socket(AF_SP, NN_PAIR);

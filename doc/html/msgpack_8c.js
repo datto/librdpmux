@@ -1,5 +1,5 @@
 var msgpack_8c =
 [
-    [ "shim_process_incoming_msg", "msgpack_8c.html#a6d46912fe4508a29aa142b46adf9ad14", null ],
-    [ "shim_write_outgoing_msg", "msgpack_8c.html#a7c4f8d9730bb09b4af136888b1b34d50", null ]
+    [ "mux_process_incoming_msg", "msgpack_8c.html#a982fc3ff64c98691c4e7cc624e2dd96b", null ],
+    [ "mux_write_outgoing_msg", "msgpack_8c.html#a91125b777db6e8cadaa415759607d939", null ]
 ];

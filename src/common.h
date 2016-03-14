@@ -30,12 +30,12 @@
  * @brief This struct is populated by the code using the library to provide callbacks for mouse and keyboard events.
  *
  * This struct is also exposed in the public header. The implementing code (usually the hypervisor) needs to provide
- * functions to deal with these events and register them into the library using shim_register_event_callbacks().
+ * functions to deal with these events and register them into the library using mux_register_event_callbacks().
  */
-typedef struct EventCallbacks {
-    void (*shim_receive_kb)(uint32_t keycode, uint32_t flags);
-    void (*shim_receive_mouse)(uint32_t x, uint32_t y, uint32_t flags);
-} EventCallbacks;
+typedef struct InputEventCallbacks {
+    void (*mux_receive_kb)(uint32_t keycode, uint32_t flags);
+    void (*mux_receive_mouse)(uint32_t x, uint32_t y, uint32_t flags);
+} InputEventCallbacks;
 
 /**
  * @brief The possible types of messages.
@@ -143,14 +143,14 @@ typedef struct update_ack {
 /**
  * @brief Object to hold information about the various types of events.
  *
- * The ShimUpdate struct can can hold exactly one of one type of event. They are designed to be held in queues.
+ * The MuxUpdate struct can can hold exactly one of one type of event. They are designed to be held in queues.
  * Use the type field to determine what sort of event it is, rather than any other sort of hackery.
  */
-typedef struct ShimUpdate {
+typedef struct MuxUpdate {
     /**
      * @brief pointer to next update in queue.
      */
-    SIMPLEQ_ENTRY(ShimUpdate) next;
+    SIMPLEQ_ENTRY(MuxUpdate) next;
     /**
      * @brief what kind of update this is.
      */
@@ -165,26 +165,26 @@ typedef struct ShimUpdate {
         mouse_update mouse;
         update_ack ack;
     };
-} ShimUpdate;
+} MuxUpdate;
 
 /**
  * @brief queue to hold ShimUpdate objects.
  *
  * This is a very simple queue backed by a linked list. Nothing fancy, gets the job done.
  */
-typedef struct ShimMsgQueue {
+typedef struct MuxMsgQueue {
     pthread_mutex_t lock;
     pthread_cond_t cond; // signals when not empty
-    SIMPLEQ_HEAD(, ShimUpdate) updates;
-} ShimMsgQueue;
+    SIMPLEQ_HEAD(, MuxUpdate) updates;
+} MuxMsgQueue;
 
 /**
  * @brief Main struct
  *
  * This struct holds all of the state in the library. There is exactly one instance of this, initialized by
- * shim_init_display_struct() and stored as a global variable.
+ * mux_init_display_struct() and stored as a global variable.
  */
-struct shim_display {
+struct mux_display {
     /**
      * @brief pointer to the framebuffer surface in memory.
      */
@@ -204,7 +204,7 @@ struct shim_display {
     /**
      * @brief Current dirty update
      */
-    ShimUpdate *dirty_update;
+    MuxUpdate *dirty_update;
     /**
      * @brief Nanomsg socket descriptor.
      */
@@ -222,22 +222,22 @@ struct shim_display {
     /**
      * @brief Outgoing message queue.
      */
-    ShimMsgQueue outgoing_messages;
+    MuxMsgQueue outgoing_messages;
     /**
      * @brief Display buffer update queue.
      */
-    ShimMsgQueue display_buffer_updates;
+    MuxMsgQueue display_buffer_updates;
 };
-typedef struct shim_display ShimDisplay;
+typedef struct mux_display MuxDisplay;
 
 /**
  * @brief global variable of the registered EventCallbacks.
  */
-extern EventCallbacks callbacks;
+extern InputEventCallbacks callbacks;
 
 /**
  * @brief Global display struct.
  */
-extern ShimDisplay *display;
+extern MuxDisplay *display;
 
 #endif //SHIM_COMMON_H

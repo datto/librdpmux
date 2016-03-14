@@ -33,24 +33,24 @@ In general, the library API is divided into three main parts:
 
 The initialization functions are responsible for starting up all the data structures internally, registering with the RDPMux server, and connecting to the communication socket. The functions in this category are:
 
-1. `shim_get_socket_path()` registers the VM with the RDPMux server 
-2. `shim_connect()` connects to the nanomsg socket created for this VM
-3. `shim_init_display_struct()` initializes all the internal data structures used by the library
+1. `mux_get_socket_path()` registers the VM with the RDPMux server
+2. `mux_connect()` connects to the nanomsg socket created for this VM
+3. `mux_init_display_struct()` initializes all the internal data structures used by the library
 
 There are also three loop functions. The library is mainly driven by these loops, and all three need to be running for the library to be working. These loops are:
 
-1. `shim_mainloop()` receives events from the server
-2. `shim_display_buffer_update_loop()` manages display updates and coalesces them for transmission 
-3. `shim_out_loop()` sends messages to the server
+1. `mux_mainloop()` receives events from the server
+2. `mux_display_buffer_update_loop()` manages display updates and coalesces them for transmission
+3. `mux_out_loop()` sends messages to the server
 
 #### Inbound Communication
 
-Inbound communication functions are registered as callbacks in the `EventCallbacks` struct and passed into the library. These functions are called when the library receives an event and needs to pass it up to the hypervisor. Right now, the only two things that the library supports are mouse and keyboard events. Currently, `EventCallbacks` looks like this:
+Inbound communication functions are registered as callbacks in the `InputEventCallbacks` struct and passed into the library. These functions are called when the library receives an event and needs to pass it up to the hypervisor. Right now, the only two things that the library supports are mouse and keyboard events. Currently, `InputEventCallbacks` looks like this:
 ```C
-typedef struct EventCallbacks {
-    void (*shim_receive_kb)(uint32_t keycode, uint32_t flags); 
-    void (*shim_receive_mouse)(uint32_t x, uint32_t y, uint32_t flags);
-} EventCallbacks;
+typedef struct InputEventCallbacks {
+    void (*mux_receive_kb)(uint32_t keycode, uint32_t flags);
+    void (*mux_receive_mouse)(uint32_t x, uint32_t y, uint32_t flags);
+} InputEventCallbacks;
 ```
 
 Hopefully this looks pretty self-explanatory. Further information is available in the Doxygen documentation.
@@ -58,26 +58,25 @@ Hopefully this looks pretty self-explanatory. Further information is available i
 #### Outbound Communication
 Outbound communication functions are used to transfer information and state from the hypervisor to the library for transmission to the RDPMux server. Currently the library supports sending framebuffer changes and startup/shutdown messages. As the feature set grows, expect more functions to be added in the future. Currently, the functions are:
 
-1. `shim_display_update()` is meant to be called when a region of the framebuffer updates
-2. `shim_display_refresh()` is meant to be called every time the virtual display refreshes.
-3. `shim_display_switch()` is meant to be called when the framebuffer changes is a big way: subpixel layout change, resolution change, etc.
+1. `mux_display_update()` is meant to be called when a region of the framebuffer updates
+2. `mux_display_refresh()` is meant to be called every time the virtual display refreshes.
+3. `mux_display_switch()` is meant to be called when the framebuffer changes is a big way: subpixel layout change, resolution change, etc.
 
 ### Quickstart
 
 #### Library Initialization
-First, initialize the library's data structures by calling `shim_init_display_struct()`. This sets up all the internal data structures, but doesn't start anything up yet. This function returns a pointer to the main display struct set up by the library for its internal usage. You can choose to keep it around, though that provides very little advantage currently. 
+First, initialize the library's data structures by calling `mux_init_display_struct()`. This sets up all the internal data structures, but doesn't start anything up yet. This function returns a pointer to the main display struct set up by the library for its internal usage. You can choose to keep it around, though that provides very little advantage currently.
 
 #### Service Registration
-Registration and initialization of the communications portion of the library is done in two parts. You first get your socket path from the RDPMux server by calling `shim_get_socket_path()`. This gives you a file path to the private Nanomsg socket used for communication with your VM's personal RDP server. 
+Registration and initialization of the communications portion of the library is done in two parts. You first get your socket path from the RDPMux server by calling `mux_get_socket_path()`. This gives you a file path to the private Nanomsg socket used for communication with your VM's personal RDP server.
 
-Next, you want to call `shim_connect()` to actually connect to the Nanomsg socket.
+Next, you want to call `mux_connect()` to actually connect to the Nanomsg socket.
 
 #### Register Callback Functions
-Mouse and keyboard events are delivered to the backend service via callback functions set via `shim_register_event_callbacks()`. The caller needs to create their own callback functions to handle incoming mouse and keyboard events, and pass them in via an `EventCallbacks` struct.
+Mouse and keyboard events are delivered to the backend service via callback functions set via `mux_register_event_callbacks()`. The caller needs to create their own callback functions to handle incoming mouse and keyboard events, and pass them in via an `InputEventCallbacks` struct.
 
 #### Starting the loops
-To actually start the library's functionality, you need to spin up the three loop functions. These are: `shim_mainloop()`, `shim_out_loop()`, and `shim_display_buffer_update_loop()`. As a caveat: these functions all contain infinite loops that block until they are needed. If you see that one of these loops is using 100% CPU, chances are you missed one of the steps above. 
-libshim
+To actually start the library's functionality, you need to spin up the three loop functions. These are: `mux_mainloop()`, `mux_out_loop()`, and `mux_display_buffer_update_loop()`. As a caveat: these functions all contain infinite loops that block until they are needed. If you see that one of these loops is using 100% CPU, chances are you missed one of the steps above.
 Once you start these three loops up, the library will be fully operational and should require no other babysitting. 
 
 ## Protocol
