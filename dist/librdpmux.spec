@@ -1,36 +1,37 @@
 Name:           librdpmux
 Version:        0.2.0
 Release:        1%{?dist}
-Summary:        Library to provide low-level VM guest interaction capabilties outside the hypervisor.
+Summary:        Library to provide low-level VM guest interaction capabilties outside the hypervisor
 License:        MIT
-URL:            http://github-server.datto.lan/sramanujam/librdpmux
+URL:            https://github.com/datto/librdpmux
 
-Source0:        librdpmux.tar.gz
+Source0:        https://github.com/datto/librdpmux/archive/v%{version}/%{name}-%{version}.tar.gz
 
-BuildRequires:  cmake >= 3.4
+BuildRequires:  cmake >= 3.2
 BuildRequires:  nanomsg0.6-devel
 BuildRequires:  glib2-devel
 BuildRequires:  pixman-devel
 
 %description
-This library provides a defined interface to interact with virtual machine guests on a very low level. It provides access
-to the current framebuffer of the VM, and to programmatically send and receive keyboard and mouse events.
+This library provides a defined interface to interact with
+virtual machine guests on a very low level. It provides access
+to the current framebuffer of the VM, and to programmatically
+send and receive keyboard and mouse events.
 
 %package        devel
 Summary:        Development files for %{name}
 Requires:       %{name} = %{version}-%{release}
-Requires:       pkgconfig
 
 %description    devel
-The %{name}-devel package contains configuration and header files for developing applications that use %{name}.
+The %{name}-devel package contains configuration and header
+files for developing applications that use %{name}.
 
 %prep
-%setup -qn librdpmux
+%setup -q
 
 %build
 %cmake .
-
-make %{?_smp_mflags} V=1
+%make_build V=1
 
 %install
 %make_install
@@ -39,10 +40,17 @@ make %{?_smp_mflags} V=1
 %postun -p /sbin/ldconfig
 
 %files
+%license LICENSE
+%defattr(-,root,root,-)
 %{_libdir}/*.so.*
 
 %files devel
-%defattr(-,root,root)
+%defattr(-,root,root,-)
+%doc doc/html
 %{_includedir}/*.h
 %{_libdir}/*.so
 %{_libdir}/pkgconfig/*.pc
+
+%changelog
+* Mon Mar 14 2016 Sri Ramanujam <sramanujam@datto.com> - 0.2.0-1
+- Initial packaging
