@@ -108,7 +108,7 @@ proto_found:
         return false;
     }
 
-    if (!mux_org_rdpmux_rdpmux_call_register_sync(proxy, id, RDPMUX_PROTOCOL_VERSION,
+    if (!mux_org_rdpmux_rdpmux_call_register_sync(proxy, id, RDPMUX_PROTOCOL_VERSION, display->uuid,
                                                   out_path, NULL, &error)) {
         printf("ERROR: Error when retrieving socket path: %s\n", error->message);
         g_error_free(error);

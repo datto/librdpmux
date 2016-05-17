@@ -49,7 +49,7 @@ static size_t mux_msg_writer(cmp_ctx_t *ctx, const void *data, size_t count)
             msg->buf = new_buf;
             msg->size = malloc_usable_size(new_buf); // I have ruined portability forever.
         } else {
-            printf("ACHTUNG: Error allocating buffer, returning 0\n");
+            printf("ERROR: Error allocating buffer, returning 0\n");
             return 0;
         }
     } else {
@@ -64,7 +64,7 @@ static size_t mux_msg_writer(cmp_ctx_t *ctx, const void *data, size_t count)
                 msg->size = msg->size * 2;
             } else {
                 // error reallocing, return null without changing the original string
-                printf("ACHTUNG: Error reallocing buffer, returning 0\n");
+                printf("ERROR: Error reallocing buffer, returning 0\n");
                 return 0;
             }
         }

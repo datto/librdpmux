@@ -24,7 +24,7 @@
 /**
  * @brief Protocol version.
  */
-#define RDPMUX_PROTOCOL_VERSION 1
+#define RDPMUX_PROTOCOL_VERSION 2
 
 /**
  * @brief This struct is populated by the code using the library to provide callbacks for mouse and keyboard events.
@@ -190,7 +190,7 @@ struct mux_display {
      */
     pixman_image_t *surface;
     /**
-     * @brief ID of the virtual machine
+     * @brief Internal ID of the virtual machine
      */
     int vm_id;
     /**
@@ -209,6 +209,11 @@ struct mux_display {
      * @brief Nanomsg socket descriptor.
      */
     int nn_sock;
+
+    /**
+     * @brief Externally passed UUID of the VM.
+     */
+    const char *uuid;
 
     /**
      * @brief Condition variable associated with shared memory region.

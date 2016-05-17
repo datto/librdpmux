@@ -4,8 +4,8 @@
  * The license of this code is the same as for the source it was derived from.
  */
 
-#ifndef __TEST_H__
-#define __TEST_H__
+#ifndef __DBUS_CONNECTOR_H__
+#define __DBUS_CONNECTOR_H__
 
 #include <gio/gio.h>
 
@@ -601,7 +601,8 @@ struct _MuxOrgRDPMuxRDPMuxIface
             MuxOrgRDPMuxRDPMux *object,
             GDBusMethodInvocation *invocation,
             gint arg_id,
-            gint arg_version);
+            gint arg_version,
+            const gchar *arg_uuid);
 
     GVariant * (*get_supported_protocol_versions) (MuxOrgRDPMuxRDPMux *object);
 
@@ -626,6 +627,7 @@ void mux_org_rdpmux_rdpmux_call_register (
         MuxOrgRDPMuxRDPMux *proxy,
         gint arg_id,
         gint arg_version,
+        const gchar *arg_uuid,
         GCancellable *cancellable,
         GAsyncReadyCallback callback,
         gpointer user_data);
@@ -640,6 +642,7 @@ gboolean mux_org_rdpmux_rdpmux_call_register_sync (
         MuxOrgRDPMuxRDPMux *proxy,
         gint arg_id,
         gint arg_version,
+        const gchar *arg_uuid,
         gchar **out_socket_path,
         GCancellable *cancellable,
         GError **error);
@@ -750,4 +753,4 @@ MuxOrgRDPMuxRDPMux *mux_org_rdpmux_rdpmux_skeleton_new (void);
 
 G_END_DECLS
 
-#endif /* __TEST_H__ */
+#endif /* __DBUS_CONNECTOR_H__ */

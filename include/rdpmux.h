@@ -27,7 +27,7 @@ void mux_out_loop();
 void *mux_display_buffer_update_loop(void *arg);
 
 void mux_register_event_callbacks(InputEventCallbacks cb);
-MuxDisplay *mux_init_display_struct();
+MuxDisplay *mux_init_display_struct(const char *uuid);
 bool mux_connect(const char *path);
 bool mux_get_socket_path(const char *name, const char *obj, char **out_path, int id);
 

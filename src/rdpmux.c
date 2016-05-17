@@ -337,13 +337,31 @@ static void mux_init_queue(MuxMsgQueue *q)
 /**
  * @func This function initializes the data structures used by the library. It also returns a pointer to the ShimDisplay
  * struct initialized, which is defined as an opaque type in the public header so that client code can't mess with it.
+ *
+ * @param uuid A UUID describing the VM.
  */
-__PUBLIC MuxDisplay *mux_init_display_struct()
+__PUBLIC MuxDisplay *mux_init_display_struct(const char *uuid)
 {
     //printf("LIBSHIM: Now initializing display struct!\n");
     display = g_malloc0(sizeof(MuxDisplay));
     display->shmem_fd = -1;
     display->dirty_update = NULL;
+    display->uuid = NULL;
+
+    if (uuid != NULL) {
+        if (strlen(uuid) != 36) {
+            printf("ERROR: Invalid UUID passed to mux_init_display_struct()\n");
+            free(display);
+            return NULL;
+        }
+        if ((display->uuid = strdup(uuid)) == NULL) {
+            printf("ERROR: String copy failed: %s\n", strerror(errno));
+            free(display);
+            return NULL;
+        }
+    } else {
+        display->uuid = NULL;
+    }
 
     pthread_cond_init(&display->shm_cond, NULL);
     pthread_mutex_init(&display->shm_lock, NULL);

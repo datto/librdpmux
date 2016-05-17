@@ -3577,10 +3577,22 @@ static const _ExtendedGDBusArgInfo _mux_org_rdpmux_rdpmux_method_info_register_I
                 FALSE
         };
 
+static const _ExtendedGDBusArgInfo _mux_org_rdpmux_rdpmux_method_info_register_IN_ARG_uuid =
+        {
+                {
+                        -1,
+                        (gchar *) "uuid",
+                        (gchar *) "s",
+                        NULL
+                },
+                FALSE
+        };
+
 static const _ExtendedGDBusArgInfo * const _mux_org_rdpmux_rdpmux_method_info_register_IN_ARG_pointers[] =
         {
                 &_mux_org_rdpmux_rdpmux_method_info_register_IN_ARG_id,
                 &_mux_org_rdpmux_rdpmux_method_info_register_IN_ARG_version,
+                &_mux_org_rdpmux_rdpmux_method_info_register_IN_ARG_uuid,
                 NULL
         };
 
@@ -3713,6 +3725,7 @@ mux_org_rdpmux_rdpmux_default_init (MuxOrgRDPMuxRDPMuxIface *iface)
      * @invocation: A #GDBusMethodInvocation.
      * @arg_id: Argument passed by remote caller.
      * @arg_version: Argument passed by remote caller.
+     * @arg_uuid: Argument passed by remote caller.
      *
      * Signal emitted when a remote caller is invoking the <link linkend="gdbus-method-org-RDPMux-RDPMux.Register">Register()</link> D-Bus method.
      *
@@ -3728,8 +3741,8 @@ mux_org_rdpmux_rdpmux_default_init (MuxOrgRDPMuxRDPMuxIface *iface)
                   NULL,
                   g_cclosure_marshal_generic,
                   G_TYPE_BOOLEAN,
-                  3,
-                  G_TYPE_DBUS_METHOD_INVOCATION, G_TYPE_INT, G_TYPE_INT);
+                  4,
+                  G_TYPE_DBUS_METHOD_INVOCATION, G_TYPE_INT, G_TYPE_INT, G_TYPE_STRING);
 
     /* GObject properties for D-Bus properties: */
     /**
@@ -3799,6 +3812,7 @@ mux_org_rdpmux_rdpmux_set_supported_protocol_versions (MuxOrgRDPMuxRDPMux *objec
  * @proxy: A #MuxOrgRDPMuxRDPMuxProxy.
  * @arg_id: Argument to pass with the method invocation.
  * @arg_version: Argument to pass with the method invocation.
+ * @arg_uuid: Argument to pass with the method invocation.
  * @cancellable: (allow-none): A #GCancellable or %NULL.
  * @callback: A #GAsyncReadyCallback to call when the request is satisfied or %NULL.
  * @user_data: User data to pass to @callback.
@@ -3814,15 +3828,17 @@ void
         MuxOrgRDPMuxRDPMux *proxy,
         gint arg_id,
 gint arg_version,
+const gchar *arg_uuid,
         GCancellable *cancellable,
 GAsyncReadyCallback callback,
         gpointer user_data)
 {
 g_dbus_proxy_call (G_DBUS_PROXY (proxy),
 "Register",
-g_variant_new ("(ii)",
+g_variant_new ("(iis)",
 arg_id,
-arg_version),
+arg_version,
+arg_uuid),
 G_DBUS_CALL_FLAGS_NONE,
 -1,
 cancellable,
@@ -3865,6 +3881,7 @@ mux_org_rdpmux_rdpmux_call_register_finish (
  * @proxy: A #MuxOrgRDPMuxRDPMuxProxy.
  * @arg_id: Argument to pass with the method invocation.
  * @arg_version: Argument to pass with the method invocation.
+ * @arg_uuid: Argument to pass with the method invocation.
  * @out_socket_path: (out): Return location for return parameter or %NULL to ignore.
  * @cancellable: (allow-none): A #GCancellable or %NULL.
  * @error: Return location for error or %NULL.
@@ -3880,6 +3897,7 @@ gboolean
         MuxOrgRDPMuxRDPMux *proxy,
         gint arg_id,
 gint arg_version,
+const gchar *arg_uuid,
         gchar **out_socket_path,
 GCancellable *cancellable,
         GError **error)
@@ -3887,9 +3905,10 @@ GCancellable *cancellable,
 GVariant *_ret;
 _ret = g_dbus_proxy_call_sync (G_DBUS_PROXY (proxy),
                                "Register",
-                               g_variant_new ("(ii)",
+                               g_variant_new ("(iis)",
                                               arg_id,
-                                              arg_version),
+                                              arg_version,
+                                              arg_uuid),
                                G_DBUS_CALL_FLAGS_NONE,
                                -1,
                                cancellable,
