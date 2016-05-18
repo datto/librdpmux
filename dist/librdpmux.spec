@@ -1,5 +1,5 @@
 Name:           librdpmux
-Version:        0.2.0
+Version:        0.3.0
 Release:        1%{?dist}
 Summary:        Library to provide low-level VM guest interaction capabilties outside the hypervisor
 License:        MIT
@@ -52,5 +52,8 @@ files for developing applications that use %{name}.
 %{_libdir}/pkgconfig/*.pc
 
 %changelog
+* Tue May 17 2016 Sri Ramanujam <sramanujam@datto.com> - 0.3.0-1
+- Implement version 2 of the RDPMux registration protocol
+
 * Mon Mar 14 2016 Sri Ramanujam <sramanujam@datto.com> - 0.2.0-1
 - Initial packaging
