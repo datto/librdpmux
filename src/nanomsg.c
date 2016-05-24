@@ -18,7 +18,7 @@ int mux_nn_recv_msg(int sock, void **buf)
         // TODO: EAGAIN indicates that the connection to the server timed out,
         // we should cleanup and cleanly exit instead of ignoring it.
         if (nn_errno() != EAGAIN) {
-            printf("NANOMSG: Something went wrong with the recv operation\n");
+            printf("RDPMUX: nanomsg: Something went wrong with the recv operation\n");
             nn_freemsg(buf);
         }
         return -1;
@@ -41,7 +41,7 @@ int mux_nn_recv_msg(int sock, void **buf)
 int mux_nn_send_msg(int sock, void *buf, size_t len)
 {
     assert(buf != NULL);
-    //printf("LIBSHIM: Sending message through nn sock now!\n");
+    printf("RDPMUX: Sending message through nn sock now!\n");
     return nn_send(sock, buf, len, 0);
 }
 
@@ -58,15 +58,18 @@ int mux_nn_send_msg(int sock, void *buf, size_t len)
 __PUBLIC bool mux_connect(const char *path)
 {
     int to = 10000;
+    int from = 1000;
     int sock = nn_socket(AF_SP, NN_PAIR);
     assert (sock >= 0);
 
     nn_setsockopt(sock, NN_SOL_SOCKET, NN_RCVTIMEO, &to, sizeof(to));
+    nn_setsockopt(sock, NN_SOL_SOCKET, NN_SNDTIMEO, &from, sizeof(from));
     int endpoint = nn_connect(sock, path);
     if (endpoint < 0) {
         printf("ERROR: nn_connect failed: %s\n", nn_strerror(nn_errno()));
         return false;
     }
     display->nn_sock = sock;
+    printf("RDPMUX: Bound to %s\n", path);
     return true;
 }

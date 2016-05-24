@@ -33,7 +33,7 @@ static void mux_copy_update_to_shmem_region(MuxUpdate *update)
     pthread_mutex_lock(&display->shm_lock);
 
 
-    //printf("LIBSHIM: Now copying update [(%d, %d) %dx%d] to shmem region\n", u.x, u.y, u.w, u.h);
+    printf("RDPMUX: Now copying update [(%d, %d) %dx%d] to shmem region\n", u.x, u.y, u.w, u.h);
     for (row = 0; row < u.h; row++) {
         src_ptr = framebuf_data + (u.w * (u.y + row)) + u.x;
         dest_ptr = shm_data + (u.w * (u.y + row)) + u.x;
@@ -48,9 +48,9 @@ static void mux_copy_update_to_shmem_region(MuxUpdate *update)
 
     // block on the signal.
     // TODO: ensure this works because I'm not sure if this is guaranteed to wake up properly.
-    //printf("DISPLAY: Now waiting on ack from other process\n");
+    printf("RDPMUX: Now waiting on ack from other process\n");
     pthread_cond_wait(&display->shm_cond, &display->shm_lock);
-    //printf("DISPLAY: Ack received! Unlocking shm region and continuing\n----------\n");
+    printf("RDPMUX: Ack received! Unlocking shm region and continuing\n----------\n");
     pthread_mutex_unlock(&display->shm_lock);
 }
 
@@ -69,7 +69,7 @@ static void mux_copy_update_to_shmem_region(MuxUpdate *update)
  */
 static void mux_expand_rect(MuxUpdate *update, int x, int y, int w, int h)
 {
-    //printf("DISPLAY: Checking to see if we need to expand bounding box from [(%d, %d) %dx%d]\n",
+    printf("RDPMUX: Checking to see if we need to expand bounding box\n");
     //update->x, update->y, update->w, update->h);
 
     display_update u = update->disp_update;
@@ -80,7 +80,7 @@ static void mux_expand_rect(MuxUpdate *update, int x, int y, int w, int h)
          (u.x <= x) && (x < (u.x + u.w)) &&
          (u.y <= y) && (y < (u.y + u.h))) {
         // new region already entirely enclosed, no need to do anything
-        //printf("DISPLAY: Bounding box does not need to be updated.\n");
+        printf("RDPMUX: Bounding box does not need to be updated.\n");
         return;
     } else {
         int update_right_coord = u.x + u.w;
@@ -91,7 +91,7 @@ static void mux_expand_rect(MuxUpdate *update, int x, int y, int w, int h)
         u.h = MAX(update_bottom_coord, new_bottom_coord) - MIN(u.y, y);
         u.x = MIN(u.x, x);
         u.y = MIN(u.y, y);
-        //printf("DISPLAY: Bounding box updated to [(%d, %d) %dx%d]\n", update->x, update->y, update->w, update->h);
+        printf("RDPMUX: Bounding box updated\n");
     }
 }
 
@@ -109,7 +109,7 @@ static void mux_expand_rect(MuxUpdate *update, int x, int y, int w, int h)
  */
 __PUBLIC void mux_display_update(int x, int y, int w, int h)
 {
-    printf("LIBSHIM: DCL display update event triggered.\n");
+    printf("RDPMUX: DCL display update event triggered.\n");
     MuxUpdate *update;
     if (!display->dirty_update) {
         update = g_malloc0(sizeof(MuxUpdate));
@@ -128,8 +128,8 @@ __PUBLIC void mux_display_update(int x, int y, int w, int h)
         mux_expand_rect(update, x, y, w, h);
     }
 
-    //printf("DISPLAY: DCL display update event (%d, %d) %dx%d completed successfully.\n",
-    //x, y, w, h);
+    printf("RDPMUX: DCL display update event (%d, %d) %dx%d completed successfully.\n",
+                             x, y, w, h);
 }
 
 /**
@@ -146,7 +146,7 @@ __PUBLIC void mux_display_switch(pixman_image_t *surface)
     // of the new framebuffer data into the space. We then enqueue a display
     // switch event that contains the new shm region's information and the new
     // dimensions of the display buffer.
-    //printf("LIBSHIM: DCL display switch event triggered.\n");
+    printf("RDPMUX: DCL display switch event triggered.\n");
 
     // save the pointers in our display struct for further use.
     display->surface = surface;
@@ -223,7 +223,7 @@ __PUBLIC void mux_display_switch(pixman_image_t *surface)
 
     // place our display switch update in the outgoing queue
     mux_queue_enqueue(&display->outgoing_messages, update);
-    //printf("DISPLAY: DCL display switch callback completed successfully.\n");
+    printf("DISPLAY: DCL display switch callback completed successfully.\n");
 }
 
 /**
@@ -233,7 +233,7 @@ __PUBLIC void mux_display_refresh()
 {
     if (display->dirty_update) {
         mux_queue_enqueue(&display->display_buffer_updates, display->dirty_update);
-        //printf("LIBSHIM: Refresh queued to RDP server process.\n");
+        printf("RDPMUX: Refresh queued to RDP server process.\n");
         display->dirty_update = NULL;
     }
 }
@@ -256,12 +256,13 @@ __PUBLIC void mux_out_loop()
         nnStr msg;
         msg.buf = NULL;
         //buf = NULL;
-        //printf("LIBSHIM: Dequeueing update in out loop now\n");
+        printf("RDPMUX: Waiting for update in out loop\n");
         MuxUpdate *update = (MuxUpdate *) mux_queue_dequeue(&display->outgoing_messages); // blocks until something in queue
         len = mux_write_outgoing_msg(update, &msg); // serialize update to buf
-        if (mux_nn_send_msg(display->nn_sock, msg.buf, len) < 0) {
+        while (mux_nn_send_msg(display->nn_sock, msg.buf, len) < 0) {
             printf("ERROR: Something went wrong in nn_send: %s\n", nn_strerror(nn_errno()));
         }
+        printf("RDPMUX: Update sent to server process!\n");
         g_free(update); // update is no longer needed, free it
         g_free(msg.buf); // free buf, no longer needed.
     }
@@ -276,12 +277,12 @@ __PUBLIC void mux_out_loop()
  */
 __PUBLIC void *mux_display_buffer_update_loop(void *arg)
 {
-    printf("LIBSHIM: Reached shim display buffer update thread!\n");
+    printf("RDPMUX: Reached shim display buffer update thread!\n");
     // init queue
     SIMPLEQ_INIT(&display->display_buffer_updates.updates);
 
     while(1) {
-        //printf("LIBSHIM: Dequeueing update in buffer update loop now\n");
+        printf("RDPMUX: Dequeueing update in buffer update loop now\n");
         MuxUpdate *update = (MuxUpdate *) mux_queue_dequeue(&display->display_buffer_updates);
         if (update->type == DISPLAY_UPDATE) {
             mux_copy_update_to_shmem_region(update); // will block until we receive ack
@@ -301,7 +302,7 @@ __PUBLIC void *mux_display_buffer_update_loop(void *arg)
  */
 __PUBLIC void *mux_mainloop(void *arg)
 {
-    //printf("LIBSHIM: Reached qemu shim in loop thread!\n");
+    printf("RDPMUX: Reached qemu shim in loop thread!\n");
     void *buf;
 
     // init recv queue
@@ -328,7 +329,7 @@ __PUBLIC void *mux_mainloop(void *arg)
  */
 static void mux_init_queue(MuxMsgQueue *q)
 {
-    //printf("LIBSHIM: Now initializing a queue!\n");
+    printf("RDPMUX: Now initializing a queue!\n");
     SIMPLEQ_INIT(&q->updates);
     pthread_cond_init(&q->cond, NULL);
     pthread_mutex_init(&q->lock, NULL);
@@ -342,7 +343,7 @@ static void mux_init_queue(MuxMsgQueue *q)
  */
 __PUBLIC MuxDisplay *mux_init_display_struct(const char *uuid)
 {
-    //printf("LIBSHIM: Now initializing display struct!\n");
+    printf("RDPMUX: Now initializing display struct\n");
     display = g_malloc0(sizeof(MuxDisplay));
     display->shmem_fd = -1;
     display->dirty_update = NULL;
