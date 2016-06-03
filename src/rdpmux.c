@@ -26,7 +26,9 @@ static void mux_copy_update_to_shmem_region(MuxUpdate *update)
     size_t row, col;
     uint32_t *framebuf_data = pixman_image_get_data(display->surface);
     uint32_t *shm_data = (uint32_t *) display->shm_buffer;
-    uint32_t *dest_ptr, *src_ptr;
+    size_t w = pixman_image_get_width(display->surface);
+    size_t h = pixman_image_get_height(display->surface);
+    int bpp = PIXMAN_FORMAT_BPP(pixman_image_get_format(display->surface));
 
     display_update u = update->disp_update;
     
@@ -34,14 +36,7 @@ static void mux_copy_update_to_shmem_region(MuxUpdate *update)
 
 
     printf("RDPMUX: Now copying update [(%d, %d) %dx%d] to shmem region\n", u.x, u.y, u.w, u.h);
-    for (row = 0; row < u.h; row++) {
-        src_ptr = framebuf_data + (u.w * (u.y + row)) + u.x;
-        dest_ptr = shm_data + (u.w * (u.y + row)) + u.x;
-
-        for (col = 0; col < u.w; col++) {
-            memcpy(dest_ptr + col, src_ptr + col, sizeof(uint32_t));
-        }
-    }
+    memcpy(shm_data, framebuf_data, w * h * (bpp / 8));
 
     // place the update on the outgoing queue
     mux_queue_enqueue(&display->outgoing_messages, update);
