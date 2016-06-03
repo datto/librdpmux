@@ -48,8 +48,11 @@ if(GIO_FOUND)
     target_link_libraries(rdpmux ${GIO_LIBRARIES})
 endif(GIO_FOUND)
 
-find_package(Nanomsg)
-target_link_libraries(rdpmux ${NANOMSG_LIBRARY})
+find_package(ZeroMQ)
+if(ZEROMQ_FOUND)
+    target_link_libraries(rdpmux ${ZEROMQ_LIBRARIES})
+    include_directories(rdpmux ${ZEROMQ_INCLUDE_DIRS})
+endif(ZEROMQ_FOUND)
 
 find_package(Pixman)
 target_link_libraries(rdpmux ${PIXMAN_LIBRARY})
