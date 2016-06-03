@@ -10,6 +10,8 @@
 #include <stdint.h>
 #include <unistd.h>
 
+#include <czmq.h>
+
 #include <glib.h>
 #include <pixman.h>
 
@@ -205,10 +207,11 @@ struct mux_display {
      * @brief Current dirty update
      */
     MuxUpdate *dirty_update;
-    /**
-     * @brief Nanomsg socket descriptor.
-     */
-    int nn_sock;
+
+    struct {
+        zctx_t *context;
+        zsock_t *socket;
+    } zmq;
 
     /**
      * @brief Externally passed UUID of the VM.

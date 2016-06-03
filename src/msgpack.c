@@ -209,7 +209,7 @@ void mux_process_incoming_msg(void *buf, int nbytes)
             break;
     }
     // clean up msg
-    nn_freemsg(msg.buf);
+    free(msg.buf);
     return;
 }
 

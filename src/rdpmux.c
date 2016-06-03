@@ -6,7 +6,7 @@
 
 #include "common.h"
 #include "msgpack.h"
-#include "nanomsg.h"
+#include "0mq.h"
 #include "queue.h"
 
 InputEventCallbacks callbacks;
@@ -250,12 +250,11 @@ __PUBLIC void mux_out_loop()
     while(true) {
         nnStr msg;
         msg.buf = NULL;
-        //buf = NULL;
         printf("RDPMUX: Waiting for update in out loop\n");
         MuxUpdate *update = (MuxUpdate *) mux_queue_dequeue(&display->outgoing_messages); // blocks until something in queue
         len = mux_write_outgoing_msg(update, &msg); // serialize update to buf
-        while (mux_nn_send_msg(display->nn_sock, msg.buf, len) < 0) {
-            printf("ERROR: Something went wrong in nn_send: %s\n", nn_strerror(nn_errno()));
+        while (mux_0mq_send_msg(msg.buf, len) < 0) {
+            printf("ERROR: Something went wrong in 0mq zframe_send\n");
         }
         printf("RDPMUX: Update sent to server process!\n");
         g_free(update); // update is no longer needed, free it
@@ -307,7 +306,7 @@ __PUBLIC void *mux_mainloop(void *arg)
     int nbytes;
     while(1) {
         buf = NULL;
-        nbytes = mux_nn_recv_msg(display->nn_sock, &buf);
+        nbytes = mux_0mq_recv_msg(&buf);
         if (nbytes > 0) {
             // successful recv is successful
             //printf("NANOMSG: We have received a message of size %d bytes!\n", nbytes);
