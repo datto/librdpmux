@@ -13,8 +13,7 @@ InputEventCallbacks callbacks;
 MuxDisplay *display;
 
 /**
- * @func Copies the region of the framebuffer noted by the coordinates in the display update struct passed in to the
- * shared memory region, then waits for the other side to copy the data out before returning.
+ * @func Copies the framebuffer into the shared memory region.
  *
  * @param update The update to copy out. Should be verified by caller to be a DISPLAY_UPDATE struct.
  */
@@ -153,11 +152,9 @@ __PUBLIC void mux_display_switch(pixman_image_t *surface)
     const char *socket_fmt = "/%d.rdpmux";
     char socket_str[20] = ""; // 20 is a magic number carefully chosen
     // to be the length of INT_MAX plus the characters
-    // in socket_fmt. If you change sockt_fmt, make
+    // in socket_fmt. If you change socket_fmt, make
     // sure to change this too.
-    int shm_size = 4096 * 2048 * sizeof(uint32_t); // rdp protocol has a max
-    // framebuffer size of
-    // 4096x2048.
+    int shm_size = 4096 * 2048 * sizeof(uint32_t); // rdp protocol has max fb size 4096x2048
     sprintf(socket_str, socket_fmt, display->vm_id);
 
     // here begins the magic of setting up the shared memory region.
@@ -180,7 +177,6 @@ __PUBLIC void mux_display_switch(pixman_image_t *surface)
         }
         // save our new shm file descriptor for later use
         display->shmem_fd = shim_fd;
-        //printf("DISPLAY: Our shmem file descriptor is %d\n", display->shmem_fd);
 
         // mmap the shm region into our process space
         void *shm_buffer = mmap(NULL, shm_size, PROT_READ | PROT_WRITE,
@@ -254,7 +250,7 @@ __PUBLIC void mux_out_loop()
         MuxUpdate *update = (MuxUpdate *) mux_queue_dequeue(&display->outgoing_messages); // blocks until something in queue
         len = mux_write_outgoing_msg(update, &msg); // serialize update to buf
         while (mux_0mq_send_msg(msg.buf, len) < 0) {
-            printf("ERROR: Something went wrong in 0mq zframe_send\n");
+            printf("ERROR: Failed to send message\n");
         }
         printf("RDPMUX: Update sent to server process!\n");
         g_free(update); // update is no longer needed, free it
@@ -276,7 +272,6 @@ __PUBLIC void *mux_display_buffer_update_loop(void *arg)
     SIMPLEQ_INIT(&display->display_buffer_updates.updates);
 
     while(1) {
-        printf("RDPMUX: Dequeueing update in buffer update loop now\n");
         MuxUpdate *update = (MuxUpdate *) mux_queue_dequeue(&display->display_buffer_updates);
         if (update->type == DISPLAY_UPDATE) {
             mux_copy_update_to_shmem_region(update); // will block until we receive ack
@@ -297,10 +292,7 @@ __PUBLIC void *mux_display_buffer_update_loop(void *arg)
 __PUBLIC void *mux_mainloop(void *arg)
 {
     printf("RDPMUX: Reached qemu shim in loop thread!\n");
-    void *buf;
-
-    // init recv queue
-    //QSIMPLEQ_INIT(&display->incoming_messages->updates);
+    void *buf = NULL;
 
     // main shim receive loop
     int nbytes;
@@ -309,7 +301,7 @@ __PUBLIC void *mux_mainloop(void *arg)
         nbytes = mux_0mq_recv_msg(&buf);
         if (nbytes > 0) {
             // successful recv is successful
-            //printf("NANOMSG: We have received a message of size %d bytes!\n", nbytes);
+            //printf("DEBUG: We have received a message of size %d bytes!\n", nbytes);
             mux_process_incoming_msg(buf, nbytes);
         }
     }

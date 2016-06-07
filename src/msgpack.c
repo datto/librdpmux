@@ -182,30 +182,34 @@ void mux_process_incoming_msg(void *buf, int nbytes)
     mux_nnstr_init(&msg, buf, nbytes);
     cmp_init(&cmp, &msg, mux_msg_reader, mux_msg_writer);
 
+    printf("DEBUG: Now deserializing msgpack array!\n");
+
     // read array out
     // we don't care about array size since we have a better way (the type)
     // of checking what the message is.
-    if (!cmp_read_array(&cmp, &array_size))
+    if (!cmp_read_array(&cmp, &array_size)) {
         return;
+    }
 
-    if (!cmp_read_uint(&cmp, &msg_type))
+    if (!cmp_read_uint(&cmp, &msg_type)) {
         return;
+    }
 
     switch(msg_type) {
         case MOUSE:
-            //printf("LIBSHIM: Processing incoming mouse msg\n");
+            //printf("DEBUG: Processing incoming mouse msg\n");
             mux_process_incoming_mouse_msg(&cmp, &msg);
             break;
         case KEYBOARD:
-            //printf("LIBSHIM: Processing incoming kb msg\n");
+            //printf("DEBUG: Processing incoming kb msg\n");
             mux_process_incoming_kb_msg(&cmp, &msg);
             break;
         case DISPLAY_UPDATE_COMPLETE:
-            //printf("LIBSHIM: Signaling shm_cond for DISPLAY_UPDATE_COMPLETE wakeup\n");
+            //printf("DEBUG: Signaling shm_cond for DISPLAY_UPDATE_COMPLETE wakeup\n");
             pthread_cond_signal(&display->shm_cond);
             break;
         default:
-            printf("ERROR: Message type not found, are you sure you're real?\n");
+            printf("ERROR: Invalid message type\n");
             break;
     }
     // clean up msg
@@ -296,3 +300,4 @@ size_t mux_write_outgoing_msg(MuxUpdate *update, nnStr *msg)
     size_t len = msg->size;
     return len;
 }
+

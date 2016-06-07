@@ -64,19 +64,16 @@ __PUBLIC bool mux_get_socket_path(const char *name, const char *obj, char **out_
 
     // we begin now, to extract meaning from our gvariants
     if (g_variant_type_is_array(type)) {
-        printf("LIBSHIM: Variant type is an array!\n");
         const GVariantType *ele_type = g_variant_type_element(type);
 
         if (g_variant_type_equal(ele_type, G_VARIANT_TYPE_INT32)) {
-            printf("LIBSHIM: Variant elements are int32!\n");
 
             iter = g_variant_iter_new(unwrapped_version);
             if (iter == NULL) {
-                printf("ERROR: iterator didn't work, bailing!\n");
+                printf("ERROR: Could not parse DBus return message\n");
                 return false;
             }
 
-            printf("LIBSHIM: Extracting information from dbus property call\n");
             GVariant *child;
             while ((child = g_variant_iter_next_value(iter))) {
                 if (g_variant_type_equal(child, G_VARIANT_TYPE_INT32)) {
@@ -87,7 +84,7 @@ __PUBLIC bool mux_get_socket_path(const char *name, const char *obj, char **out_
                 }
             }
 
-            printf("LIBSHIM: Protocol not found!\n");
+            printf("ERROR: DBus protocol not found!\n");
             return false;
 
         } else {
@@ -95,16 +92,15 @@ __PUBLIC bool mux_get_socket_path(const char *name, const char *obj, char **out_
             return false;
         }
     } else {
-        printf("LIBSHIM: Variant is not an array...\n");
-
         if (g_variant_type_equal(type, G_VARIANT_TYPE_INT32)) {
             proto = g_variant_get_int32(unwrapped_version);
         }
     }
 
 proto_found:
-    printf("LIBSHIM: Protocol version is %d\n", proto);
     if (proto != RDPMUX_PROTOCOL_VERSION) {
+        printf("ERROR: Protocol mismatch with RDPMux server, %d vs %d",
+                proto, RDPMUX_PROTOCOL_VERSION);
         return false;
     }
 
@@ -118,3 +114,4 @@ proto_found:
     display->vm_id = id;
     return true;
 }
+
