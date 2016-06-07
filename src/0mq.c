@@ -91,7 +91,7 @@ __PUBLIC bool mux_connect(const char *path)
     display->zmq.socket = zsock_new_dealer(path);
     assert (display->zmq.socket != NULL);
 
-    if (zsock_connect(display->zmq.socket, path) == -1) {
+    if (zsock_connect(display->zmq.socket, "%s", path) == -1) {
         printf("ERROR: 0mq connect failed");
         return false;
     }
