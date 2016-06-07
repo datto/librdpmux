@@ -1,6 +1,5 @@
 /** @file */
 #include "0mq.h"
-#include "common.h"
 
 /**
  * @brief Receives data through the given 0mq socket and sticks it into buf.
@@ -13,13 +12,40 @@
  */
 int mux_0mq_recv_msg(void **buf)
 {
-    zframe_t *msg;
-    if ((msg = zframe_recv(display->zmq.socket)) == NULL) {
-        printf("RDPMUX: 0mq: Something went wrong with the recv operation\n");
+    zmsg_t *msg = NULL;
+    zframe_t *identity = NULL;
+    zframe_t *data = NULL;
+    int len = -1;
+
+    printf("RDPMUX: Now blocking on recv!\n");
+
+    if ((msg = zmsg_recv(display->zmq.socket)) == NULL) { // blocking
+        printf("ERROR: Could not receive message from socket!\n");
         return -1;
     }
-    //printf("LIBSHIM: Receiving message through nn sock now\n");
-    return 0;
+
+    //zmsg_print(msg);
+    identity = zmsg_pop(msg);
+    //zframe_print(identity, "F: ");
+
+    if (!zframe_streq(identity, display->uuid)) {
+        char *wrong = zframe_strdup(identity);
+        printf("ERROR: Incorrect UUID: %s", wrong);
+        free(wrong);
+        zframe_destroy(&identity);
+        return -1;
+    }
+
+    data = zmsg_pop(msg);
+    //zframe_print(data, "F: ");
+    len = zframe_size(data);
+    *buf = calloc(1, zframe_size(data) + 1);
+    memcpy(*buf, zframe_data(data), zframe_size(data));
+
+    zframe_destroy(&identity);
+    zframe_destroy(&data);
+
+    return len;
 }
 
 /**
@@ -34,15 +60,20 @@ int mux_0mq_recv_msg(void **buf)
  */
 int mux_0mq_send_msg(void *buf, size_t len)
 {
-    zframe_t *message;
-    assert(buf != NULL);
-    message = zframe_new(buf, len);
-    printf("RDPMUX: Sending message through 0mq sock now!\n");
-    if (zframe_send(&message, display->zmq.socket, 0) == -1) {
-        printf("ERROR: Could not send message through 0mq socket\n");
+    zmsg_t *msg = zmsg_new();
+
+    printf("DEBUG: Now attempting to send message!\n");
+    zmsg_addstr(msg, display->uuid);
+    zmsg_addmem(msg, buf, len);
+
+    if (zmsg_size(msg) != 2) {
+        printf("ERROR: Something went wrong building zmsg\n");
         return -1;
     }
-    return 0;
+
+    zmsg_send(&msg, display->zmq.socket); // TODO: figure out how return code works for this
+
+    return len;
 }
 
 /**
@@ -60,7 +91,6 @@ __PUBLIC bool mux_connect(const char *path)
     display->zmq.socket = zsock_new_dealer(path);
     assert (display->zmq.socket != NULL);
 
-    zmq_setsockopt(display->zmq.socket, ZMQ_IDENTITY, display->uuid, strlen(display->uuid));
     if (zsock_connect(display->zmq.socket, path) == -1) {
         printf("ERROR: 0mq connect failed");
         return false;
