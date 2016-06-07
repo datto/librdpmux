@@ -342,6 +342,7 @@ __PUBLIC MuxDisplay *mux_init_display_struct(const char *uuid)
     display->shmem_fd = -1;
     display->dirty_update = NULL;
     display->uuid = NULL;
+    display->zmq.socket = NULL;
 
     if (uuid != NULL) {
         if (strlen(uuid) != 36) {

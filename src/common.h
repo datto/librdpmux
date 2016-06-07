@@ -209,7 +209,6 @@ struct mux_display {
     MuxUpdate *dirty_update;
 
     struct {
-        zctx_t *context;
         zsock_t *socket;
     } zmq;
 
