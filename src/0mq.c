@@ -19,7 +19,7 @@ int mux_0mq_recv_msg(void **buf)
 
     printf("RDPMUX: Now blocking on recv!\n");
 
-    if ((msg = zmsg_recv(display->zmq.socket)) == NULL) { // blocking
+    if ((msg = zmsg_recv(display->zmq.socket)) == NULL) {
         printf("ERROR: Could not receive message from socket!\n");
         return -1;
     }

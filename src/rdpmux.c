@@ -234,28 +234,11 @@ __PUBLIC void mux_display_refresh()
  */
 
 /**
- * @func This function manages outbound communication. It is designed to be a thread runloop, and should be
- * dispatched as a runnable inside a separate thread during library initialization. Its function prototype
- * matches what pthreads et al. expect.
+ * @func Unused, stubbed out until formal removal.
  */
 __PUBLIC void mux_out_loop()
 {
-    size_t len;
-
-    //printf("LIBSHIM: Reached shim out loop thread!\n");
-    while(true) {
-        nnStr msg;
-        msg.buf = NULL;
-        printf("RDPMUX: Waiting for update in out loop\n");
-        MuxUpdate *update = (MuxUpdate *) mux_queue_dequeue(&display->outgoing_messages); // blocks until something in queue
-        len = mux_write_outgoing_msg(update, &msg); // serialize update to buf
-        while (mux_0mq_send_msg(msg.buf, len) < 0) {
-            printf("ERROR: Failed to send message\n");
-        }
-        printf("RDPMUX: Update sent to server process!\n");
-        g_free(update); // update is no longer needed, free it
-        g_free(msg.buf); // free buf, no longer needed.
-    }
+    return;
 }
 
 /**
@@ -283,8 +266,8 @@ __PUBLIC void *mux_display_buffer_update_loop(void *arg)
 }
 
 /**
- * @func This function manages inbound communication to the library. It is designed to be a thread runloop, and should be
- * dispatched as a runnable inside a separate thread during library initialization. Its function prototype
+ * @func This function manages communication to and from the library. It is designed to be a thread runloop, and should
+ * be dispatched as a runnable inside a separate thread during library initialization. Its function prototype
  * matches what pthreads et al. expect.
  *
  * @param arg void pointer to anything. Not used by the function in any way, just there to satisfy pthreads.
@@ -293,16 +276,46 @@ __PUBLIC void *mux_mainloop(void *arg)
 {
     printf("RDPMUX: Reached qemu shim in loop thread!\n");
     void *buf = NULL;
+    size_t len;
+
+    zpoller_t *poller = zpoller_new(display->zmq.socket, NULL);
+    if (poller == NULL) {
+        printf("ERROR: Could not initialize socket poller\n");
+        return NULL;
+    }
 
     // main shim receive loop
     int nbytes;
     while(1) {
+        nnStr msg;
+        msg.buf = NULL;
         buf = NULL;
-        nbytes = mux_0mq_recv_msg(&buf);
-        if (nbytes > 0) {
-            // successful recv is successful
-            //printf("DEBUG: We have received a message of size %d bytes!\n", nbytes);
-            mux_process_incoming_msg(buf, nbytes);
+
+        while(!mux_queue_check_is_empty(&display->outgoing_messages)) {
+            MuxUpdate *update = (MuxUpdate *) mux_queue_dequeue(&display->outgoing_messages); // blocks until something in queue
+            len = mux_write_outgoing_msg(update, &msg); // serialize update to buf
+            while (mux_0mq_send_msg(msg.buf, len) < 0) {
+                printf("ERROR: Failed to send message\n");
+            }
+            g_free(update); // update is no longer needed, free it
+            g_free(msg.buf); // free buf, no longer needed.
+            msg.buf = NULL;
+        }
+
+        // block on receiving messages
+        zsock_t *which = (zsock_t *) zpoller_wait(poller, 5); // 5ms timeout
+        if (which != display->zmq.socket)  {
+            if (zpoller_terminated(poller)) {
+                printf("ERROR: Zpoller terminated!\n");
+                return NULL;
+            }
+        } else {
+            nbytes = mux_0mq_recv_msg(&buf);
+            if (nbytes > 0) {
+                // successful recv is successful
+                //printf("DEBUG: We have received a message of size %d bytes!\n", nbytes);
+                mux_process_incoming_msg(buf, nbytes);
+            }
         }
     }
     return NULL;

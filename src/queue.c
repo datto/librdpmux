@@ -7,7 +7,7 @@
  * @returns Whether the queue is empty.
  * @param q The queue to check.
  */
-static bool mux_queue_check_is_empty(MuxMsgQueue *q)
+bool mux_queue_check_is_empty(MuxMsgQueue *q)
 {
     return SIMPLEQ_EMPTY(&q->updates);
 }
