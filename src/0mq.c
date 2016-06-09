@@ -1,5 +1,6 @@
 /** @file */
 #include "0mq.h"
+#include "common.h"
 
 /**
  * @brief Receives data through the given 0mq socket and sticks it into buf.
@@ -89,12 +90,22 @@ int mux_0mq_send_msg(void *buf, size_t len)
 __PUBLIC bool mux_connect(const char *path)
 {
     display->zmq.socket = zsock_new_dealer(path);
-    assert (display->zmq.socket != NULL);
+    if (display->zmq.socket == NULL) {
+        printf("ERROR: 0mq socket creation failed\n");
+        return false;
+    }
 
     if (zsock_connect(display->zmq.socket, "%s", path) == -1) {
         printf("ERROR: 0mq connect failed");
         return false;
     }
     printf("RDPMUX: Bound to %s\n", path);
+
+    display->zmq.poller = zpoller_new(display->zmq.socket, NULL);
+    if (display->zmq.poller == NULL) {
+        printf("ERROR: Could not initialize socket poller\n");
+        return false;
+    }
+
     return true;
 }

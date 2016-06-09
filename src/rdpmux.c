@@ -277,12 +277,7 @@ __PUBLIC void *mux_mainloop(void *arg)
     printf("RDPMUX: Reached qemu shim in loop thread!\n");
     void *buf = NULL;
     size_t len;
-
-    zpoller_t *poller = zpoller_new(display->zmq.socket, NULL);
-    if (poller == NULL) {
-        printf("ERROR: Could not initialize socket poller\n");
-        return NULL;
-    }
+    zpoller_t *poller = display->zmq.poller;
 
     // main shim receive loop
     int nbytes;
@@ -380,4 +375,31 @@ __PUBLIC MuxDisplay *mux_init_display_struct(const char *uuid)
 __PUBLIC void mux_register_event_callbacks(InputEventCallbacks cb)
 {
     callbacks = cb;
+}
+
+/**
+ * @func Should be called to safely cleanup library state. Note that ZeroMQ threads may (will) hang around for a long
+ * time unless they're cleaned up by this method.
+ */
+__PUBLIC void mux_cleanup(MuxDisplay *display)
+{
+    printf("DEBUG: Now cleaning up librdpmux struct\n");
+    if (display == NULL) {
+        printf("ERROR: Invalid pointer passed to mux cleanup\n");
+        return;
+    }
+    // clean up queues
+    mux_queue_clear(&display->outgoing_messages);
+    mux_queue_clear(&display->display_buffer_updates);
+
+    // clean up uuid
+    g_free(&display->uuid);
+
+    // clean up socket
+    zpoller_destroy(&display->zmq.poller);
+    zsock_destroy(&display->zmq.socket);
+
+    // clean up conds/mutexes
+    pthread_cond_destroy(&display->shm_cond);
+    pthread_mutex_destroy(&display->shm_lock);
 }
