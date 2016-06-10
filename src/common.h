@@ -55,25 +55,25 @@ typedef enum message_type {
  * @brief Parameters for a display update event.
  *
  * Display updates carry coordinates for a rectangular screen region, denoted as the coordinates of the top left corner
- * along with the width and height of the rectangle. All values are in px.
+ * and the coordinates of the bottom right corner. All values are in px.
  */
 typedef struct display_update {
     /**
      * @brief X-coordinate of top left corner of region
      */
-    int x;
+    int x1;
     /**
      * @brief Y-coordinate of top left corner of region
      */
-    int y;
+    int y1;
     /**
-     * @brief width of region
+     * @brief X-coordinate of bottom right corner of region
      */
-    int w;
+    int x2;
     /**
-     * @brief height of region
+     * @brief X-coordinate of bottom right corner of region
      */
-    int h;
+    int y2;
 } display_update;
 
 /**

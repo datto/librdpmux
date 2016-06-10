@@ -233,16 +233,16 @@ static void mux_write_outgoing_update_msg(cmp_ctx_t *cmp, MuxUpdate *update)
     if (!cmp_write_uint(cmp, update->type))
         printf("MSGPACK: Something went wrong writing update type\n");
 
-    if (!cmp_write_uint(cmp, u.x))
+    if (!cmp_write_uint(cmp, u.x1))
         printf("MSGPACK: Something went wrong writing x\n");
 
-    if (!cmp_write_uint(cmp, u.y))
+    if (!cmp_write_uint(cmp, u.y1))
         printf("MSGPACK: Something went wrong writing y\n");
 
-    if (!cmp_write_uint(cmp, u.w))
+    if (!cmp_write_uint(cmp, (u.x2 - u.x1)))
         printf("MSGPACK: Something went wrong writing w\n");
 
-    if (!cmp_write_uint(cmp, u.h))
+    if (!cmp_write_uint(cmp, (u.y2 - u.y1)))
         printf("MSGPACK: Something went wrong writing h\n");
 }
 

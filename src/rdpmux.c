@@ -34,7 +34,7 @@ static void mux_copy_update_to_shmem_region(MuxUpdate *update)
     pthread_mutex_lock(&display->shm_lock);
 
 
-    printf("RDPMUX: Now copying update [(%d, %d) %dx%d] to shmem region\n", u.x, u.y, u.w, u.h);
+    printf("RDPMUX: Now copying update [(%d, %d) , (%d, %d)] to shmem region\n", u.x1, u.y1, u.x2, u.y2);
     memcpy(shm_data, framebuf_data, w * h * (bpp / 8));
 
     // place the update on the outgoing queue
@@ -63,30 +63,24 @@ static void mux_copy_update_to_shmem_region(MuxUpdate *update)
  */
 static void mux_expand_rect(MuxUpdate *update, int x, int y, int w, int h)
 {
-    printf("RDPMUX: Checking to see if we need to expand bounding box\n");
-    //update->x, update->y, update->w, update->h);
-
     display_update u = update->disp_update;
 
-    // bounding box checks
-    if ( (x + w) <= (u.x + u.w) &&
-         (y + h) <= (u.y + u.h) &&
-         (u.x <= x) && (x < (u.x + u.w)) &&
-         (u.y <= y) && (y < (u.y + u.h))) {
-        // new region already entirely enclosed, no need to do anything
-        printf("RDPMUX: Bounding box does not need to be updated.\n");
-        return;
-    } else {
-        int update_right_coord = u.x + u.w;
-        int new_right_coord = x + w;
-        u.w = MAX(update_right_coord, new_right_coord) - MIN(u.x, x);
-        int update_bottom_coord = u.y + u.h;
-        int new_bottom_coord = y + h;
-        u.h = MAX(update_bottom_coord, new_bottom_coord) - MIN(u.y, y);
-        u.x = MIN(u.x, x);
-        u.y = MIN(u.y, y);
-        printf("RDPMUX: Bounding box updated\n");
-    }
+    int new_x1 = x;
+    int new_y1 = y;
+    int new_x2 = x+w;
+    int new_y2 = y+h;
+
+    int old_x1 = u.x1;
+    int old_y1 = u.y1;
+    int old_x2 = u.x2;
+    int old_y2 = u.y2;
+
+    u.x1 = MIN(old_x1, new_x1);
+    u.y1 = MIN(old_y1, new_y1);
+    u.x2 = MAX(old_x2, new_x2);
+    u.y2 = MAX(old_y2, new_y2);
+
+    printf("Bounding box updated to [(%d, %d), (%d, %d)]\n", u.x1, u.y1, u.x2, u.y2);
 }
 
 /**
@@ -108,10 +102,10 @@ __PUBLIC void mux_display_update(int x, int y, int w, int h)
     if (!display->dirty_update) {
         update = g_malloc0(sizeof(MuxUpdate));
         update->type = DISPLAY_UPDATE;
-        update->disp_update.x = x;
-        update->disp_update.y = y;
-        update->disp_update.w = w;
-        update->disp_update.h = h;
+        update->disp_update.x1 = x;
+        update->disp_update.y1 = y;
+        update->disp_update.x2 = x+w;
+        update->disp_update.y2 = y+h;
         display->dirty_update = update;
     } else {
         // update dirty bounding box
