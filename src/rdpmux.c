@@ -22,20 +22,8 @@ static void mux_copy_update_to_shmem_region(MuxUpdate *update)
     // in this function, we copy the update's dirty buffer to the new shmem
     // region and place the update on the outgoing queue for transmission. We
     // then wait for a cond to signal before we release control.
-    size_t row, col;
-    uint32_t *framebuf_data = pixman_image_get_data(display->surface);
-    uint32_t *shm_data = (uint32_t *) display->shm_buffer;
-    size_t w = pixman_image_get_width(display->surface);
-    size_t h = pixman_image_get_height(display->surface);
-    int bpp = PIXMAN_FORMAT_BPP(pixman_image_get_format(display->surface));
-
-    display_update u = update->disp_update;
     
     pthread_mutex_lock(&display->shm_lock);
-
-
-    printf("RDPMUX: Now copying update [(%d, %d) , (%d, %d)] to shmem region\n", u.x1, u.y1, u.x2, u.y2);
-    memcpy(shm_data, framebuf_data, w * h * (bpp / 8));
 
     // place the update on the outgoing queue
     mux_queue_enqueue(&display->outgoing_messages, update);
@@ -217,9 +205,23 @@ __PUBLIC void mux_display_switch(pixman_image_t *surface)
 __PUBLIC void mux_display_refresh()
 {
     if (display->dirty_update) {
-        mux_queue_enqueue(&display->display_buffer_updates, display->dirty_update);
-        printf("RDPMUX: Refresh queued to RDP server process.\n");
-        display->dirty_update = NULL;
+        if (pthread_mutex_trylock(&display->shm_lock) == 0) {
+            uint32_t *framebuf_data = pixman_image_get_data(display->surface);
+            uint32_t *shm_data = (uint32_t *) display->shm_buffer;
+            size_t w = pixman_image_get_width(display->surface);
+            size_t h = pixman_image_get_height(display->surface);
+            int bpp = PIXMAN_FORMAT_BPP(pixman_image_get_format(display->surface));
+
+            printf("RDPMUX: Now copying framebuffer to shmem region\n");
+            memcpy(shm_data, framebuf_data, w * h * (bpp / 8));
+
+            mux_queue_enqueue(&display->display_buffer_updates, display->dirty_update);
+            printf("RDPMUX: Refresh queued to RDP server process\n");
+            display->dirty_update = NULL;
+            pthread_mutex_unlock(&display->shm_lock);
+        }
+    } else {
+        printf("RDPMUX: Refresh deferred\n");
     }
 }
 

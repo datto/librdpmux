@@ -188,9 +188,14 @@ typedef struct MuxMsgQueue {
  */
 struct mux_display {
     /**
-     * @brief pointer to the framebuffer surface in memory.
+     * @brief pointer to the QEMU framebuffer surface.
      */
     pixman_image_t *surface;
+
+    /**
+     * @brief pointer to library copy of surface. Use this for everything
+     */
+    pixman_image_t *mux_surface;
     /**
      * @brief Internal ID of the virtual machine
      */
