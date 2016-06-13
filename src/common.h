@@ -216,6 +216,7 @@ struct mux_display {
     struct {
         zsock_t *socket;
         zpoller_t *poller;
+        const char *path;
     } zmq;
 
     /**

@@ -394,6 +394,7 @@ __PUBLIC void mux_cleanup(MuxDisplay *display)
     // clean up socket
     zpoller_destroy(&display->zmq.poller);
     zsock_set_linger(&display->zmq.socket, 0);
+    zsock_disconnect(display->zmq.socket, "%s", display->zmq.path);
     zsock_destroy(&display->zmq.socket);
 
     // clean up conds/mutexes

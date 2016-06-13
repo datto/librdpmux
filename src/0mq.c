@@ -89,6 +89,7 @@ int mux_0mq_send_msg(void *buf, size_t len)
  */
 __PUBLIC bool mux_connect(const char *path)
 {
+    display->zmq.path = path;
     display->zmq.socket = zsock_new_dealer(path);
     if (display->zmq.socket == NULL) {
         printf("ERROR: 0mq socket creation failed\n");
