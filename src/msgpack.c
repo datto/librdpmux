@@ -197,15 +197,15 @@ void mux_process_incoming_msg(void *buf, int nbytes)
 
     switch(msg_type) {
         case MOUSE:
-            //printf("DEBUG: Processing incoming mouse msg\n");
+            printf("DEBUG: Processing incoming mouse msg\n");
             mux_process_incoming_mouse_msg(&cmp, &msg);
             break;
         case KEYBOARD:
-            //printf("DEBUG: Processing incoming kb msg\n");
+            printf("DEBUG: Processing incoming kb msg\n");
             mux_process_incoming_kb_msg(&cmp, &msg);
             break;
         case DISPLAY_UPDATE_COMPLETE:
-            //printf("DEBUG: Signaling shm_cond for DISPLAY_UPDATE_COMPLETE wakeup\n");
+            printf("DEBUG: Signaling shm_cond for DISPLAY_UPDATE_COMPLETE wakeup\n");
             pthread_cond_signal(&display->shm_cond);
             break;
         default:
