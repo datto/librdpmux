@@ -213,61 +213,54 @@ __PUBLIC void mux_display_refresh()
             int pixelSize;
             size_t x = 0;
             size_t y = 0;
+            size_t w = 0;
+            size_t h = 0;
             display_update* u;
-            unsigned char* srcData = (unsigned char*) pixman_image_get_data(display->surface);
-            unsigned char* dstData = (unsigned char*) display->shm_buffer;
-            size_t w = pixman_image_get_width(display->surface);
-            size_t h = pixman_image_get_height(display->surface);
             size_t surfaceWidth = pixman_image_get_width(display->surface);
             size_t surfaceHeight = pixman_image_get_height(display->surface);
             int bpp = PIXMAN_FORMAT_BPP(pixman_image_get_format(display->surface));
+            unsigned char* srcData = (unsigned char*) pixman_image_get_data(display->surface);
+            unsigned char* dstData = (unsigned char*) display->shm_buffer;
 
             printf("RDPMUX: Now copying framebuffer to shmem region\n");
 
-            if (1)
-            {
-                u = &display->dirty_update->disp_update;
+            u = &display->dirty_update->disp_update;
 
-		if (u->x1 % 16)
-			u->x1 -= (u->x1 % 16);
+            if (u->x1 % 16)
+                u->x1 -= (u->x1 % 16);
 
-		if (u->y1 % 16)
-			u->y1 -= (u->y1 % 16);
+            if (u->y1 % 16)
+                u->y1 -= (u->y1 % 16);
 
-		if (u->x2 % 16)
-			u->x2 += 16 - (u->x2 % 16);
+            if (u->x2 % 16)
+                u->x2 += 16 - (u->x2 % 16);
 
-		if (u->y2 % 16)
-			u->y2 += 16 - (u->y2 % 16);
+            if (u->y2 % 16)
+                u->y2 += 16 - (u->y2 % 16);
 
-		if (u->x2 > surfaceWidth)
-			u->x2 = surfaceWidth;
+            if (u->x2 > surfaceWidth)
+                u->x2 = surfaceWidth;
 
-		if (u->y2 > surfaceHeight)
-			u->y2 = surfaceHeight;
+            if (u->y2 > surfaceHeight)
+                u->y2 = surfaceHeight;
 
-                x = u->x1;
-                y = u->y1;
-                w = u->x2 - u->x1;
-                h = u->y2 - u->y1;
+            x = u->x1;
+            y = u->y1;
+            w = u->x2 - u->x1;
+            h = u->y2 - u->y1;
 
-                pixelSize = (bpp + 7) / 8;
+            pixelSize = (bpp + 7) / 8;
 
-		/**
-                 * aligning the copy offsets does not yield a good performance gain,
-                 * but copying contiguous memory blocks makes a huge difference.
-                 * by forcing copying of full lines on buffers with the same step,
-                 * we can use a single memcpy rather than one memcpy per line.
-                 */
-		x = 0;
-		w = surfaceWidth;
+            /**
+             * aligning the copy offsets does not yield a good performance gain,
+             * but copying contiguous memory blocks makes a huge difference.
+             * by forcing copying of full lines on buffers with the same step,
+             * we can use a single memcpy rather than one memcpy per line.
+             */
+            x = 0;
+            w = surfaceWidth;
 
-                mux_pixels_copy(dstData, w * pixelSize, x, y, w, h, srcData, w * pixelSize, x, y, bpp);
-            }
-            else
-            {
-                memcpy(dstData, srcData, w * h * (bpp / 8));
-            }
+            mux_pixels_copy(dstData, w * pixelSize, x, y, w, h, srcData, w * pixelSize, x, y, bpp);
 
             if (display->out_update == NULL) {
                 printf("RDPMUX: Copying dirty update to out update\n");
@@ -280,7 +273,7 @@ __PUBLIC void mux_display_refresh()
 
             g_free(display->dirty_update);
             display->dirty_update = NULL;
-//            printf("RDPMUX: Refresh queued to RDP server process\n");
+
             pthread_cond_signal(&display->update_cond);
             pthread_mutex_unlock(&display->shm_lock);
         }
