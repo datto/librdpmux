@@ -209,7 +209,7 @@ __PUBLIC void mux_display_refresh()
             pthread_mutex_unlock(&display->shm_lock);
         }
     } else {
-        printf("RDPMUX: Refresh deferred\n");
+        //printf("RDPMUX: Refresh deferred\n");
     }
 }
 
@@ -266,7 +266,7 @@ __PUBLIC void *mux_display_buffer_update_loop(void *arg)
  */
 __PUBLIC void *mux_mainloop(void *arg)
 {
-    printf("RDPMUX: Reached qemu shim in loop thread!\n");
+//    printf("RDPMUX: Reached qemu shim in loop thread!\n");
     void *buf = NULL;
     size_t len;
     zpoller_t *poller = display->zmq.poller;
@@ -315,7 +315,7 @@ __PUBLIC void *mux_mainloop(void *arg)
  */
 static void mux_init_queue(MuxMsgQueue *q)
 {
-    printf("RDPMUX: Now initializing a queue!\n");
+//    printf("RDPMUX: Now initializing a queue!\n");
     SIMPLEQ_INIT(&q->updates);
     pthread_cond_init(&q->cond, NULL);
     pthread_mutex_init(&q->lock, NULL);
@@ -329,7 +329,7 @@ static void mux_init_queue(MuxMsgQueue *q)
  */
 __PUBLIC MuxDisplay *mux_init_display_struct(const char *uuid)
 {
-    printf("RDPMUX: Now initializing display struct\n");
+//    printf("RDPMUX: Now initializing display struct\n");
     display = g_malloc0(sizeof(MuxDisplay));
     display->shmem_fd = -1;
     display->dirty_update = NULL;
@@ -376,7 +376,7 @@ __PUBLIC void mux_register_event_callbacks(InputEventCallbacks cb)
  */
 __PUBLIC void mux_cleanup(MuxDisplay *display)
 {
-    printf("DEBUG: Now cleaning up librdpmux struct\n");
+//    printf("DEBUG: Now cleaning up librdpmux struct\n");
     if (display == NULL) {
         printf("ERROR: Invalid pointer passed to mux cleanup\n");
         return;

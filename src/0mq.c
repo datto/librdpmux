@@ -18,7 +18,7 @@ int mux_0mq_recv_msg(void **buf)
     zframe_t *data = NULL;
     int len = -1;
 
-    printf("RDPMUX: Now blocking on recv!\n");
+//    printf("RDPMUX: Now blocking on recv!\n");
 
     if ((msg = zmsg_recv(display->zmq.socket)) == NULL) {
         printf("ERROR: Could not receive message from socket!\n");
@@ -63,7 +63,7 @@ int mux_0mq_send_msg(void *buf, size_t len)
 {
     zmsg_t *msg = zmsg_new();
 
-    printf("DEBUG: Now attempting to send message!\n");
+//    printf("DEBUG: Now attempting to send message!\n");
     zmsg_addstr(msg, display->uuid);
     zmsg_addmem(msg, buf, len);
 
