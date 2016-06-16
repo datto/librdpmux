@@ -40,6 +40,37 @@ static void mux_expand_rect(MuxUpdate *update, int x, int y, int w, int h)
     u->y2 = MAX(u->y2, new_y2);
 }
 
+static void mux_pixels_copy(unsigned char* dstData, int dstStep, int xDst, int yDst, int width, int height, unsigned char* srcData, int srcStep, int xSrc, int ySrc, int bpp)
+{
+	int lineSize;
+	int pixelSize;
+	unsigned char* pSrc;
+	unsigned char* pDst;
+	unsigned char* pEnd;
+
+	pixelSize = (bpp + 7) / 8;
+	lineSize = width * pixelSize;
+
+	pSrc = &srcData[(ySrc * srcStep) + (xSrc * pixelSize)];
+	pDst = &dstData[(yDst * dstStep) + (xDst * pixelSize)];
+
+	if ((srcStep == dstStep) && (lineSize == srcStep))
+	{
+		memcpy(pDst, pSrc, lineSize * height);
+	}
+	else
+	{
+		pEnd = pSrc + (srcStep * height);
+
+		while (pSrc < pEnd)
+		{
+			memcpy(pDst, pSrc, lineSize);
+			pSrc += srcStep;
+			pDst += dstStep;
+		}
+	}
+}
+
 /**
  * @func Public API function designed to be called when a region of the framebuffer changes. For example, when a window
  * moves or an animation updates on screen.
@@ -175,16 +206,68 @@ __PUBLIC void mux_display_switch(pixman_image_t *surface)
  */
 __PUBLIC void mux_display_refresh()
 {
-    if (display->dirty_update) {
-        if (pthread_mutex_trylock(&display->shm_lock) == 0) {
-            uint32_t *framebuf_data = pixman_image_get_data(display->surface);
-            uint32_t *shm_data = (uint32_t *) display->shm_buffer;
+    if (display->dirty_update)
+    {
+        if (pthread_mutex_trylock(&display->shm_lock) == 0)
+        {
+            int pixelSize;
+            size_t x = 0;
+            size_t y = 0;
+            display_update* u;
+            unsigned char* srcData = (unsigned char*) pixman_image_get_data(display->surface);
+            unsigned char* dstData = (unsigned char*) display->shm_buffer;
             size_t w = pixman_image_get_width(display->surface);
             size_t h = pixman_image_get_height(display->surface);
+            size_t surfaceWidth = pixman_image_get_width(display->surface);
+            size_t surfaceHeight = pixman_image_get_height(display->surface);
             int bpp = PIXMAN_FORMAT_BPP(pixman_image_get_format(display->surface));
 
             printf("RDPMUX: Now copying framebuffer to shmem region\n");
-            memcpy(shm_data, framebuf_data, w * h * (bpp / 8));
+
+            if (1)
+            {
+                u = &display->dirty_update->disp_update;
+
+		if (u->x1 % 16)
+			u->x1 -= (u->x1 % 16);
+
+		if (u->y1 % 16)
+			u->y1 -= (u->y1 % 16);
+
+		if (u->x2 % 16)
+			u->x2 += 16 - (u->x2 % 16);
+
+		if (u->y2 % 16)
+			u->y2 += 16 - (u->y2 % 16);
+
+		if (u->x2 > surfaceWidth)
+			u->x2 = surfaceWidth;
+
+		if (u->y2 > surfaceHeight)
+			u->y2 = surfaceHeight;
+
+                x = u->x1;
+                y = u->y1;
+                w = u->x2 - u->x1;
+                h = u->y2 - u->y1;
+
+                pixelSize = (bpp + 7) / 8;
+
+		/**
+                 * aligning the copy offsets does not yield a good performance gain,
+                 * but copying contiguous memory blocks makes a huge difference.
+                 * by forcing copying of full lines on buffers with the same step,
+                 * we can use a single memcpy rather than one memcpy per line.
+                 */
+		x = 0;
+		w = surfaceWidth;
+
+                mux_pixels_copy(dstData, w * pixelSize, x, y, w, h, srcData, w * pixelSize, x, y, bpp);
+            }
+            else
+            {
+                memcpy(dstData, srcData, w * h * (bpp / 8));
+            }
 
             if (display->out_update == NULL) {
                 printf("RDPMUX: Copying dirty update to out update\n");
