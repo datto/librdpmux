@@ -27,24 +27,17 @@ MuxDisplay *display;
  */
 static void mux_expand_rect(MuxUpdate *update, int x, int y, int w, int h)
 {
-    display_update u = update->disp_update;
+    display_update *u = &update->disp_update;
 
     int new_x1 = x;
     int new_y1 = y;
     int new_x2 = x+w;
     int new_y2 = y+h;
 
-    int old_x1 = u.x1;
-    int old_y1 = u.y1;
-    int old_x2 = u.x2;
-    int old_y2 = u.y2;
-
-    u.x1 = MIN(old_x1, new_x1);
-    u.y1 = MIN(old_y1, new_y1);
-    u.x2 = MAX(old_x2, new_x2);
-    u.y2 = MAX(old_y2, new_y2);
-
-    printf("Bounding box updated to [(%d, %d), (%d, %d)]\n", u.x1, u.y1, u.x2, u.y2);
+    u->x1 = MIN(u->x1, new_x1);
+    u->y1 = MIN(u->y1, new_y1);
+    u->x2 = MAX(u->x2, new_x2);
+    u->y2 = MAX(u->y2, new_y2);
 }
 
 /**
@@ -80,8 +73,8 @@ __PUBLIC void mux_display_update(int x, int y, int w, int h)
         mux_expand_rect(update, x, y, w, h);
     }
 
-    printf("RDPMUX: DCL display update event (%d, %d) %dx%d completed successfully.\n",
-                             x, y, w, h);
+    printf("Bounding box updated to [(%d, %d), (%d, %d)]\n", update->disp_update.x1, update->disp_update.x2,
+           update->disp_update.x2, update->disp_update.y2);
 }
 
 /**
@@ -198,8 +191,8 @@ __PUBLIC void mux_display_refresh()
                 display->out_update = g_memdup(display->dirty_update, sizeof(MuxUpdate));
             } else {
                 printf("RDPMUX: Calculating new out update bounds\n");
-                display_update u = display->dirty_update->disp_update;
-                mux_expand_rect(display->out_update, u.x1, u.y1, u.x2 - u.x1, u.y2 - u.y1);
+                display_update *u = &display->dirty_update->disp_update;
+                mux_expand_rect(display->out_update, u->x1, u->y1, u->x2 - u->x1, u->y2 - u->y1);
             }
 
             g_free(display->dirty_update);
