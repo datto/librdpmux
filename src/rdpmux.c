@@ -13,30 +13,6 @@ InputEventCallbacks callbacks;
 MuxDisplay *display;
 
 /**
- * @func Copies the framebuffer into the shared memory region.
- *
- * @param update The update to copy out. Should be verified by caller to be a DISPLAY_UPDATE struct.
- */
-static void mux_copy_update_to_shmem_region(MuxUpdate *update)
-{
-    // in this function, we copy the update's dirty buffer to the new shmem
-    // region and place the update on the outgoing queue for transmission. We
-    // then wait for a cond to signal before we release control.
-    
-    pthread_mutex_lock(&display->shm_lock);
-
-    // place the update on the outgoing queue
-    mux_queue_enqueue(&display->outgoing_messages, update);
-
-    // block on the signal.
-    // TODO: ensure this works because I'm not sure if this is guaranteed to wake up properly.
-    printf("RDPMUX: Now waiting on ack from other process\n");
-    pthread_cond_wait(&display->shm_cond, &display->shm_lock);
-    printf("RDPMUX: Ack received! Unlocking shm region and continuing\n----------\n");
-    pthread_mutex_unlock(&display->shm_lock);
-}
-
-/**
  * @func Checks whether the bounding box of the display update needs to be expanded, and does so if necessary.
  *
  * This function is called when more than one display update event is received per refresh tick. It computes the smallest
@@ -183,7 +159,6 @@ __PUBLIC void mux_display_switch(pixman_image_t *surface)
     // clear the outgoing queues (all those old messages for the old display
     // are now totally invalid since we have a new display to work against)
     mux_queue_clear(&display->outgoing_messages);
-    mux_queue_clear(&display->display_buffer_updates);
 
     pthread_mutex_lock(&display->shm_lock);
     memcpy(display->shm_buffer, framebuf_data,
@@ -201,6 +176,9 @@ __PUBLIC void mux_display_switch(pixman_image_t *surface)
 
 /**
  * @func Public API function, to be called when the framebuffer display refreshes.
+ *
+ * This function attempts to lock the shared memory region, and if it succeeds, will sync the framebuffer
+ * to the shared memory and copy the current dirty update for transmission.
  */
 __PUBLIC void mux_display_refresh()
 {
@@ -215,9 +193,19 @@ __PUBLIC void mux_display_refresh()
             printf("RDPMUX: Now copying framebuffer to shmem region\n");
             memcpy(shm_data, framebuf_data, w * h * (bpp / 8));
 
-            mux_queue_enqueue(&display->display_buffer_updates, display->dirty_update);
-            printf("RDPMUX: Refresh queued to RDP server process\n");
+            if (display->out_update == NULL) {
+                printf("RDPMUX: Copying dirty update to out update\n");
+                display->out_update = g_memdup(display->dirty_update, sizeof(MuxUpdate));
+            } else {
+                printf("RDPMUX: Calculating new out update bounds\n");
+                display_update u = display->dirty_update->disp_update;
+                mux_expand_rect(display->out_update, u.x1, u.y1, u.x2 - u.x1, u.y2 - u.y1);
+            }
+
+            g_free(display->dirty_update);
             display->dirty_update = NULL;
+//            printf("RDPMUX: Refresh queued to RDP server process\n");
+            pthread_cond_signal(&display->update_cond);
             pthread_mutex_unlock(&display->shm_lock);
         }
     } else {
@@ -230,34 +218,42 @@ __PUBLIC void mux_display_refresh()
  */
 
 /**
- * @func Unused, stubbed out until formal removal.
+ * @func Outgoing message loop. It is designed to be run as a thread runloop, and should be dispatched as a runnable
+ * inside a separate thread during library initialization. Its function prototype matches what pthreads et al. expect.
+ *
+ * This function queues outgoing messages, and blocks waiting for the server to copy data out of the shared memory
+ * region and return an ack message to the library. This ensures that the library and server are not accessing the shared
+ * memory concurrently.
  */
 __PUBLIC void mux_out_loop()
 {
-    return;
+    while(true) {
+        pthread_mutex_lock(&display->shm_lock);
+        while (display->out_update == NULL) {
+            pthread_cond_wait(&display->update_cond, &display->shm_lock);
+        }
+
+        printf("RDPMUX: Cond signaled, now sending out_update!\n");
+        // place the update on the outgoing queue
+        mux_queue_enqueue(&display->outgoing_messages, display->out_update);
+        display->out_update = NULL;
+        printf("RDPMUX: out_update qeueued and reset!\n");
+
+        // block on the signal.
+        printf("RDPMUX: Now waiting on ack from other process\n");
+        pthread_cond_wait(&display->shm_cond, &display->shm_lock);
+        printf("RDPMUX: Ack received! Unlocking shm region and continuing\n----------\n");
+        pthread_mutex_unlock(&display->shm_lock);
+    }
 }
 
 /**
- * @func This function manages display buffer updates. It is designed to be a thread runloop, and should be
- * dispatched as a runnable inside a separate thread during library initialization. Its function prototype
- * matches what pthreads et al. expect.
+ * @func Unused, stubbed out until formal removal.
  *
  * @param arg Not at all used, just there to satisfy pthreads.
  */
 __PUBLIC void *mux_display_buffer_update_loop(void *arg)
 {
-    printf("RDPMUX: Reached shim display buffer update thread!\n");
-    // init queue
-    SIMPLEQ_INIT(&display->display_buffer_updates.updates);
-
-    while(1) {
-        MuxUpdate *update = (MuxUpdate *) mux_queue_dequeue(&display->display_buffer_updates);
-        if (update->type == DISPLAY_UPDATE) {
-            mux_copy_update_to_shmem_region(update); // will block until we receive ack
-        } else {
-            printf("ERROR: Wrong type of update queued on outgoing updates queue\n");
-        }
-    }
     return NULL;
 }
 
@@ -337,6 +333,7 @@ __PUBLIC MuxDisplay *mux_init_display_struct(const char *uuid)
     display = g_malloc0(sizeof(MuxDisplay));
     display->shmem_fd = -1;
     display->dirty_update = NULL;
+    display->out_update = NULL;
     display->uuid = NULL;
     display->zmq.socket = NULL;
 
@@ -357,9 +354,9 @@ __PUBLIC MuxDisplay *mux_init_display_struct(const char *uuid)
 
     pthread_cond_init(&display->shm_cond, NULL);
     pthread_mutex_init(&display->shm_lock, NULL);
+    pthread_cond_init(&display->update_cond, NULL);
 
     mux_init_queue(&display->outgoing_messages);
-    mux_init_queue(&display->display_buffer_updates);
 
     return display;
 }
@@ -386,7 +383,6 @@ __PUBLIC void mux_cleanup(MuxDisplay *display)
     }
     // clean up queues
     mux_queue_clear(&display->outgoing_messages);
-    mux_queue_clear(&display->display_buffer_updates);
 
     // clean up uuid
     g_free(&display->uuid);
@@ -400,4 +396,5 @@ __PUBLIC void mux_cleanup(MuxDisplay *display)
     // clean up conds/mutexes
     pthread_cond_destroy(&display->shm_cond);
     pthread_mutex_destroy(&display->shm_lock);
+    pthread_cond_destroy(&display->update_cond);
 }

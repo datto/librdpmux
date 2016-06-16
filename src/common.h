@@ -193,10 +193,6 @@ struct mux_display {
     pixman_image_t *surface;
 
     /**
-     * @brief pointer to library copy of surface. Use this for everything
-     */
-    pixman_image_t *mux_surface;
-    /**
      * @brief Internal ID of the virtual machine
      */
     int vm_id;
@@ -212,6 +208,10 @@ struct mux_display {
      * @brief Current dirty update
      */
     MuxUpdate *dirty_update;
+    /**
+     * @brief Current outgoing update
+     */
+    MuxUpdate *out_update;
 
     struct {
         zsock_t *socket;
@@ -234,13 +234,18 @@ struct mux_display {
     pthread_mutex_t shm_lock;
 
     /**
+     * @brief Condition variable associated with outgoing update.
+     */
+    pthread_cond_t update_cond;
+    /**
+     * @brief Lock guarding access to current outgoing update.
+     */
+    pthread_mutex_t update_lock;
+
+    /**
      * @brief Outgoing message queue.
      */
     MuxMsgQueue outgoing_messages;
-    /**
-     * @brief Display buffer update queue.
-     */
-    MuxMsgQueue display_buffer_updates;
 };
 typedef struct mux_display MuxDisplay;
 
