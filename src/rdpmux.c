@@ -103,7 +103,7 @@ static void mux_copy_pixels(unsigned char *dstData, int dstStep, int xDst, int y
  */
 __PUBLIC void mux_display_update(int x, int y, int w, int h)
 {
-    printf("RDPMUX: DCL display update event triggered.\n");
+    mux_printf("DCL display update event triggered");
     MuxUpdate *update;
     if (!display->dirty_update) {
         update = g_malloc0(sizeof(MuxUpdate));
@@ -122,7 +122,7 @@ __PUBLIC void mux_display_update(int x, int y, int w, int h)
         mux_expand_rect(update, x, y, w, h);
     }
 
-    printf("Bounding box updated to [(%d, %d), (%d, %d)]\n", update->disp_update.x1, update->disp_update.x2,
+    mux_printf("Bounding box updated to [(%d, %d), (%d, %d)]", update->disp_update.x1, update->disp_update.x2,
            update->disp_update.x2, update->disp_update.y2);
 }
 
@@ -136,7 +136,7 @@ __PUBLIC void mux_display_update(int x, int y, int w, int h)
  */
 __PUBLIC void mux_display_switch(pixman_image_t *surface)
 {
-    printf("RDPMUX: DCL display switch event triggered.\n");
+    mux_printf("DCL display switch event triggered.");
 
     // save the pointers in our display struct for further use.
     display->surface = surface;
@@ -159,13 +159,13 @@ __PUBLIC void mux_display_switch(pixman_image_t *surface)
         int shim_fd = shm_open(socket_str,
                                O_CREAT | O_EXCL | O_RDWR, S_IRUSR | S_IRGRP | S_IROTH);
         if (shim_fd < 0) {
-            printf("ERROR: shm_open failed: %s\n", strerror(errno));
+            mux_printf_error("shm_open failed: %s", strerror(errno));
             return;
         }
 
         // resize the newly created shm region to the size of the framebuffer
         if (ftruncate(shim_fd, shm_size)) {
-            printf("ERROR: ftruncate of new buffer failed: %s\n", strerror(errno));
+            mux_printf_error("ftruncate of new buffer failed: %s", strerror(errno));
             return;
         }
         // save our new shm file descriptor for later use
@@ -175,7 +175,7 @@ __PUBLIC void mux_display_switch(pixman_image_t *surface)
         void *shm_buffer = mmap(NULL, shm_size, PROT_READ | PROT_WRITE,
                                 MAP_SHARED, display->shmem_fd, 0);
         if (shm_buffer == MAP_FAILED) {
-            printf("ERROR: mmap failed: %s\n", strerror(errno));
+            mux_printf_error("mmap failed: %s", strerror(errno));
             return;
         }
 
@@ -206,7 +206,7 @@ __PUBLIC void mux_display_switch(pixman_image_t *surface)
 
     // place our display switch update in the outgoing queue
     mux_queue_enqueue(&display->outgoing_messages, update);
-    printf("DISPLAY: DCL display switch callback completed successfully.\n");
+    mux_printf("DISPLAY: DCL display switch callback completed successfully.");
 }
 
 /**
@@ -231,7 +231,7 @@ __PUBLIC void mux_display_refresh()
             unsigned char* srcData = (unsigned char*) pixman_image_get_data(display->surface);
             unsigned char* dstData = (unsigned char*) display->shm_buffer;
 
-            printf("RDPMUX: Now copying framebuffer to shmem region\n");
+            mux_printf("Now copying framebuffer to shmem region");
 
             u = &display->dirty_update->disp_update;
 
@@ -276,10 +276,10 @@ __PUBLIC void mux_display_refresh()
             mux_copy_pixels(dstData, w * pixelSize, x, y, w, h, srcData, w * pixelSize, x, y, bpp);
 
             if (display->out_update == NULL) {
-                printf("RDPMUX: Copying dirty update to out update\n");
+                mux_printf("Copying dirty update to out update");
                 display->out_update = g_memdup(display->dirty_update, sizeof(MuxUpdate));
             } else {
-                printf("RDPMUX: Calculating new out update bounds\n");
+                mux_printf("Calculating new out update bounds");
                 display_update *u = &display->dirty_update->disp_update;
                 mux_expand_rect(display->out_update, u->x1, u->y1, u->x2 - u->x1, u->y2 - u->y1);
             }
@@ -291,7 +291,7 @@ __PUBLIC void mux_display_refresh()
             pthread_mutex_unlock(&display->shm_lock);
         }
     } else {
-        //printf("RDPMUX: Refresh deferred\n");
+        mux_printf("Refresh deferred");
     }
 }
 
@@ -318,12 +318,12 @@ __PUBLIC void mux_out_loop()
         // place the update on the outgoing queue
         mux_queue_enqueue(&display->outgoing_messages, display->out_update);
         display->out_update = NULL;
-        printf("RDPMUX: out_update qeueued and reset!\n");
+        mux_printf("out_update qeueued and reset!");
 
         // block on the signal.
-        printf("RDPMUX: Now waiting on ack from other process\n");
+        mux_printf("Now waiting on ack from other process");
         pthread_cond_wait(&display->shm_cond, &display->shm_lock);
-        printf("RDPMUX: Ack received! Unlocking shm region and continuing\n----------\n");
+        mux_printf("Ack received! Unlocking shm region and continuing\n----------");
         pthread_mutex_unlock(&display->shm_lock);
     }
 }
@@ -347,7 +347,7 @@ __PUBLIC void *mux_display_buffer_update_loop(void *arg)
  */
 __PUBLIC void *mux_mainloop(void *arg)
 {
-//    printf("RDPMUX: Reached qemu shim in loop thread!\n");
+    mux_printf("Reached qemu shim in loop thread!");
     void *buf = NULL;
     size_t len;
     zpoller_t *poller = display->zmq.poller;
@@ -363,7 +363,7 @@ __PUBLIC void *mux_mainloop(void *arg)
             MuxUpdate *update = (MuxUpdate *) mux_queue_dequeue(&display->outgoing_messages); // blocks until something in queue
             len = mux_write_outgoing_msg(update, &msg); // serialize update to buf
             while (mux_0mq_send_msg(msg.buf, len) < 0) {
-                printf("ERROR: Failed to send message\n");
+                mux_printf_error("Failed to send message");
             }
             g_free(update); // update is no longer needed, free it
             g_free(msg.buf); // free buf, no longer needed.
@@ -374,14 +374,14 @@ __PUBLIC void *mux_mainloop(void *arg)
         zsock_t *which = (zsock_t *) zpoller_wait(poller, 5); // 5ms timeout
         if (which != display->zmq.socket)  {
             if (zpoller_terminated(poller)) {
-                printf("ERROR: Zpoller terminated!\n");
+                mux_printf_error("Zpoller terminated!");
                 return NULL;
             }
         } else {
             nbytes = mux_0mq_recv_msg(&buf);
             if (nbytes > 0) {
                 // successful recv is successful
-                //printf("DEBUG: We have received a message of size %d bytes!\n", nbytes);
+                mux_printf("We have received a message of size %d bytes!", nbytes);
                 mux_process_incoming_msg(buf, nbytes);
             }
         }
@@ -418,12 +418,12 @@ __PUBLIC MuxDisplay *mux_init_display_struct(const char *uuid)
 
     if (uuid != NULL) {
         if (strlen(uuid) != 36) {
-            printf("ERROR: Invalid UUID passed to mux_init_display_struct()\n");
+            mux_printf_error("Invalid UUID");
             free(display);
             return NULL;
         }
         if ((display->uuid = strdup(uuid)) == NULL) {
-            printf("ERROR: String copy failed: %s\n", strerror(errno));
+            mux_printf_error("String copy failed: %s", strerror(errno));
             free(display);
             return NULL;
         }
@@ -455,9 +455,9 @@ __PUBLIC void mux_register_event_callbacks(InputEventCallbacks cb)
  */
 __PUBLIC void mux_cleanup(MuxDisplay *display)
 {
-//    printf("DEBUG: Now cleaning up librdpmux struct\n");
+    mux_printf("Now cleaning up librdpmux struct");
     if (display == NULL) {
-        printf("ERROR: Invalid pointer passed to mux cleanup\n");
+        mux_printf_error("Invalid MuxDisplay pointer");
         return;
     }
     // clean up queues

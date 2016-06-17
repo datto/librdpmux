@@ -29,6 +29,22 @@
 #define RDPMUX_PROTOCOL_VERSION 2
 
 /**
+ * @brief debug output macro
+ */
+#ifdef USE_DEBUG_OUTPUT
+#define mux_printf(x, ...) fprintf(stdout, "DEBUG:   %s:%d: " x "\n", \
+                            __func__, __LINE__, ##__VA_ARGS__);
+#else
+#define mux_printf(x, ...) ;
+#endif
+
+/**
+ * @brief error output macro
+ */
+#define mux_printf_error(x, ...) fprintf(stderr, "ERROR:   %s:%d: " x "\n", \
+                            __func__, __LINE__, ##__VA_ARGS__);
+
+/**
  * @brief This struct is populated by the code using the library to provide callbacks for mouse and keyboard events.
  *
  * This struct is also exposed in the public header. The implementing code (usually the hypervisor) needs to provide
@@ -237,10 +253,12 @@ struct mux_display {
      * @brief Condition variable associated with outgoing update.
      */
     pthread_cond_t update_cond;
+
     /**
-     * @brief Lock guarding access to current outgoing update.
+     * @brief Lock guarding access to the stop variable.
      */
-    pthread_mutex_t update_lock;
+    pthread_mutex_t stop_lock;
+    bool stop;
 
     /**
      * @brief Outgoing message queue.

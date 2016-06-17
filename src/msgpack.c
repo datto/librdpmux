@@ -43,13 +43,13 @@ static size_t mux_msg_writer(cmp_ctx_t *ctx, const void *data, size_t count)
         // if buf needs to be newly allocated to hold our serialization
         // This typically happens when we start creating our serialized data
         // and this is the first invocation of mux_msg_writer.
-        //printf("Allocating new buffer because msg->buf is NULL\n");
+        mux_printf("Allocating new buffer");
         void *new_buf = g_malloc0(count * sizeof(uint8_t));
         if (new_buf) {
             msg->buf = new_buf;
             msg->size = malloc_usable_size(new_buf); // I have ruined portability forever.
         } else {
-            printf("ERROR: Error allocating buffer, returning 0\n");
+            mux_printf_error("Cannot allocate buffer");
             return 0;
         }
     } else {
@@ -64,7 +64,7 @@ static size_t mux_msg_writer(cmp_ctx_t *ctx, const void *data, size_t count)
                 msg->size = msg->size * 2;
             } else {
                 // error reallocing, return null without changing the original string
-                printf("ERROR: Error reallocing buffer, returning 0\n");
+                mux_printf_error("Error reallocing buffer, returning 0");
                 return 0;
             }
         }
@@ -122,12 +122,12 @@ static void mux_process_incoming_kb_msg(cmp_ctx_t *cmp, nnStr *msg)
     uint32_t flags, keycode;
 
     if (!cmp_read_uint(cmp, &keycode)) {
-        printf("ERROR: kb_msg: flags wasn't read properly\n");
+        mux_printf_error("flags wasn't read properly");
         return;
     }
 
     if (!cmp_read_uint(cmp, &flags)) {
-        printf("ERROR: kb_msg: keycode wasn't read properly\n");
+        mux_printf_error("keycode wasn't read properly");
         return;
     }
 
@@ -148,17 +148,17 @@ static void mux_process_incoming_mouse_msg(cmp_ctx_t *cmp, nnStr *msg)
     uint32_t flags, mouse_x, mouse_y;
 
     if (!cmp_read_uint(cmp, &mouse_x)) {
-        printf("MSGPACK: mouse_msg: mouse_x pos wasn't read properly\n");
+        mux_printf_error("mouse_x wasn't read properly");
         return;
     }
 
     if (!cmp_read_uint(cmp, &mouse_y)) {
-        printf("MSGPACK: mouse_msg: mouse_y pos wasn't read properly\n");
+        mux_printf_error("mouse_y wasn't read properly");
         return;
     }
 
     if (!cmp_read_uint(cmp, &flags)) {
-        printf("MSGPACK: mouse_msg: flags uint wasn't read properly\n");
+        mux_printf_error("flags uint wasn't read properly");
         return;
     }
 
@@ -182,7 +182,7 @@ void mux_process_incoming_msg(void *buf, int nbytes)
     mux_nnstr_init(&msg, buf, nbytes);
     cmp_init(&cmp, &msg, mux_msg_reader, mux_msg_writer);
 
-//    printf("DEBUG: Now deserializing msgpack array!\n");
+//    mux_printf("Now deserializing msgpack array!");
 
     // read array out
     // we don't care about array size since we have a better way (the type)
@@ -197,19 +197,19 @@ void mux_process_incoming_msg(void *buf, int nbytes)
 
     switch(msg_type) {
         case MOUSE:
-//            printf("DEBUG: Processing incoming mouse msg\n");
+            mux_printf("Processing incoming mouse msg");
             mux_process_incoming_mouse_msg(&cmp, &msg);
             break;
         case KEYBOARD:
-//            printf("DEBUG: Processing incoming kb msg\n");
+            mux_printf("Processing incoming kb msg");
             mux_process_incoming_kb_msg(&cmp, &msg);
             break;
         case DISPLAY_UPDATE_COMPLETE:
-//            printf("DEBUG: Signaling shm_cond for DISPLAY_UPDATE_COMPLETE wakeup\n");
+            mux_printf("Signaling shm_cond for DISPLAY_UPDATE_COMPLETE wakeup");
             pthread_cond_signal(&display->shm_cond);
             break;
         default:
-            printf("ERROR: Invalid message type\n");
+            mux_printf_error("Invalid message type");
             break;
     }
     // clean up msg
@@ -228,22 +228,22 @@ static void mux_write_outgoing_update_msg(cmp_ctx_t *cmp, MuxUpdate *update)
     display_update u = update->disp_update;
 
     if (!cmp_write_array(cmp, 5))
-        printf("MSGPACK: Something went wrong writing array specifier\n");
+        mux_printf_error("Something went wrong writing array specifier");
 
     if (!cmp_write_uint(cmp, update->type))
-        printf("MSGPACK: Something went wrong writing update type\n");
+        mux_printf_error("Something went wrong writing update type");
 
     if (!cmp_write_uint(cmp, u.x1))
-        printf("MSGPACK: Something went wrong writing x\n");
+        mux_printf_error("Something went wrong writing x");
 
     if (!cmp_write_uint(cmp, u.y1))
-        printf("MSGPACK: Something went wrong writing y\n");
+        mux_printf_error("Something went wrong writing y");
 
     if (!cmp_write_uint(cmp, (u.x2 - u.x1)))
-        printf("MSGPACK: Something went wrong writing w\n");
+        mux_printf_error("Something went wrong writing w");
 
     if (!cmp_write_uint(cmp, (u.y2 - u.y1)))
-        printf("MSGPACK: Something went wrong writing h\n");
+        mux_printf_error("Something went wrong writing h");
 }
 
 /**
@@ -257,19 +257,19 @@ static void mux_write_outgoing_switch_msg(cmp_ctx_t *cmp, MuxUpdate *update)
     display_switch u = update->disp_switch;
 
     if (!cmp_write_array(cmp, 4))
-        printf("MSGPACK: Something went wrong writing array specifier\n");
+        mux_printf_error("Something went wrong writing array specifier");
 
     if (!cmp_write_uint(cmp, update->type))
-        printf("MSGPACK: Something went wrong writing update type\n");
+        mux_printf_error("Something went wrong writing update type");
 
     if (!cmp_write_uint(cmp, u.format))
-        printf("MSGPACK: Something went wrong writing format\n");
+        mux_printf_error("Something went wrong writing format");
 
     if (!cmp_write_uint(cmp, u.w))
-        printf("MSGPACK: Something went wrong writing w\n");
+        mux_printf_error("Something went wrong writing w");
 
     if (!cmp_write_uint(cmp, u.h))
-        printf("MSGPACK: Something went wrong writing h\n");
+        mux_printf_error("Something went wrong writing h");
 }
 
 /**
@@ -283,7 +283,7 @@ static void mux_write_outgoing_switch_msg(cmp_ctx_t *cmp, MuxUpdate *update)
 size_t mux_write_outgoing_msg(MuxUpdate *update, nnStr *msg)
 {
     // takes a struct and serializes it to a msgpack message.
-    //printf("LIBSHIM: Writing a new message now!\n");
+    //printf("LIBSHIM: Writing a new message now!");
     cmp_ctx_t cmp;
     //nnStr msg;
     mux_nnstr_init(msg, msg->buf, 0);
@@ -294,7 +294,7 @@ size_t mux_write_outgoing_msg(MuxUpdate *update, nnStr *msg)
     } else if (update->type == DISPLAY_SWITCH) {
         mux_write_outgoing_switch_msg(&cmp, update);
     } else {
-        printf("ERROR: Unknown message type queued for writing!\n");
+        mux_printf_error("Unknown message type queued for writing!");
     }
 
     size_t len = msg->size;

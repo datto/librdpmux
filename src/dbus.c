@@ -42,7 +42,7 @@ __PUBLIC bool mux_get_socket_path(const char *name, const char *obj, char **out_
             &error);
 
     if (error != NULL) {
-        printf("DBUS: Error when instantiating dbus proxy: %s\n", error->message);
+        mux_printf_error("could not instantiate dbus proxy: %s", error->message);
         g_error_free(error);
         return false;
     }
@@ -51,12 +51,12 @@ __PUBLIC bool mux_get_socket_path(const char *name, const char *obj, char **out_
     // get the list of supported protocol versions, and check if our version is in there
     protocol_versions = mux_org_rdpmux_rdpmux_get_supported_protocol_versions(proxy);
     if (protocol_versions == NULL) {
-        printf("DBUS: Error communicating with remote dbus service\n");
+        mux_printf_error("could not communicate with remote dbus service");
         return false;
     }
     unwrapped_version = g_variant_get_child_value(protocol_versions, 0);
     if (unwrapped_version == NULL) {
-        printf("DBUS: Error communicating with remote dbus service\n");
+        mux_printf_error("could not comumnicate with remote dbus service");
         return false;
     }
 
@@ -70,7 +70,7 @@ __PUBLIC bool mux_get_socket_path(const char *name, const char *obj, char **out_
 
             iter = g_variant_iter_new(unwrapped_version);
             if (iter == NULL) {
-                printf("ERROR: Could not parse DBus return message\n");
+                mux_printf_error("Could not parse DBus return message");
                 return false;
             }
 
@@ -84,11 +84,11 @@ __PUBLIC bool mux_get_socket_path(const char *name, const char *obj, char **out_
                 }
             }
 
-            printf("ERROR: DBus protocol not found!\n");
+            mux_printf_error("DBus protocol not found!\n");
             return false;
 
         } else {
-            printf("ERROR: Don't know how to handle variant type %s, bailing!\n", (char *) ele_type);
+            mux_printf_error("Don't know how to handle variant type %s, bailing", (char *) ele_type);
             return false;
         }
     } else {
@@ -99,14 +99,13 @@ __PUBLIC bool mux_get_socket_path(const char *name, const char *obj, char **out_
 
 proto_found:
     if (proto != RDPMUX_PROTOCOL_VERSION) {
-        printf("ERROR: Protocol mismatch with RDPMux server, %d vs %d",
-                proto, RDPMUX_PROTOCOL_VERSION);
+        mux_printf_error("Protocol mismatch with RDPMux server, %d vs %d", proto, RDPMUX_PROTOCOL_VERSION);
         return false;
     }
 
     if (!mux_org_rdpmux_rdpmux_call_register_sync(proxy, id, RDPMUX_PROTOCOL_VERSION, display->uuid,
                                                   out_path, NULL, &error)) {
-        printf("ERROR: Error when retrieving socket path: %s\n", error->message);
+        mux_printf_error("could not retrieve socket path: %s", error->message);
         g_error_free(error);
         return false;
     }

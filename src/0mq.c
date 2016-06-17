@@ -18,10 +18,10 @@ int mux_0mq_recv_msg(void **buf)
     zframe_t *data = NULL;
     int len = -1;
 
-//    printf("RDPMUX: Now blocking on recv!\n");
+    mux_printf("Now blocking on recv");
 
     if ((msg = zmsg_recv(display->zmq.socket)) == NULL) {
-        printf("ERROR: Could not receive message from socket!\n");
+        mux_printf_error("Could not receive message from socket!");
         return -1;
     }
 
@@ -31,7 +31,7 @@ int mux_0mq_recv_msg(void **buf)
 
     if (!zframe_streq(identity, display->uuid)) {
         char *wrong = zframe_strdup(identity);
-        printf("ERROR: Incorrect UUID: %s", wrong);
+        mux_printf_error("Incorrect UUID: %s", wrong);
         free(wrong);
         zframe_destroy(&identity);
         return -1;
@@ -63,12 +63,12 @@ int mux_0mq_send_msg(void *buf, size_t len)
 {
     zmsg_t *msg = zmsg_new();
 
-//    printf("DEBUG: Now attempting to send message!\n");
+    mux_printf("Now attempting to send message!");
     zmsg_addstr(msg, display->uuid);
     zmsg_addmem(msg, buf, len);
 
     if (zmsg_size(msg) != 2) {
-        printf("ERROR: Something went wrong building zmsg\n");
+        mux_printf_error("Something went wrong building zmsg");
         return -1;
     }
 
@@ -92,19 +92,19 @@ __PUBLIC bool mux_connect(const char *path)
     display->zmq.path = path;
     display->zmq.socket = zsock_new_dealer(path);
     if (display->zmq.socket == NULL) {
-        printf("ERROR: 0mq socket creation failed\n");
+        mux_printf_error("0mq socket creation failed");
         return false;
     }
 
     if (zsock_connect(display->zmq.socket, "%s", path) == -1) {
-        printf("ERROR: 0mq connect failed");
+        mux_printf_error("0mq connect failed");
         return false;
     }
-    printf("RDPMUX: Bound to %s\n", path);
+    mux_printf("Bound to %s", path);
 
     display->zmq.poller = zpoller_new(display->zmq.socket, NULL);
     if (display->zmq.poller == NULL) {
-        printf("ERROR: Could not initialize socket poller\n");
+        mux_printf_error("Could not initialize socket poller");
         return false;
     }
 
