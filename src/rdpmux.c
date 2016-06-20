@@ -6,53 +6,11 @@
 
 #include "common.h"
 #include "msgpack.h"
-#include "nanomsg.h"
+#include "0mq.h"
 #include "queue.h"
 
 InputEventCallbacks callbacks;
 MuxDisplay *display;
-
-/**
- * @func Copies the region of the framebuffer noted by the coordinates in the display update struct passed in to the
- * shared memory region, then waits for the other side to copy the data out before returning.
- *
- * @param update The update to copy out. Should be verified by caller to be a DISPLAY_UPDATE struct.
- */
-static void mux_copy_update_to_shmem_region(MuxUpdate *update)
-{
-    // in this function, we copy the update's dirty buffer to the new shmem
-    // region and place the update on the outgoing queue for transmission. We
-    // then wait for a cond to signal before we release control.
-    size_t row, col;
-    uint32_t *framebuf_data = pixman_image_get_data(display->surface);
-    uint32_t *shm_data = (uint32_t *) display->shm_buffer;
-    uint32_t *dest_ptr, *src_ptr;
-
-    display_update u = update->disp_update;
-    
-    pthread_mutex_lock(&display->shm_lock);
-
-
-    printf("RDPMUX: Now copying update [(%d, %d) %dx%d] to shmem region\n", u.x, u.y, u.w, u.h);
-    for (row = 0; row < u.h; row++) {
-        src_ptr = framebuf_data + (u.w * (u.y + row)) + u.x;
-        dest_ptr = shm_data + (u.w * (u.y + row)) + u.x;
-
-        for (col = 0; col < u.w; col++) {
-            memcpy(dest_ptr + col, src_ptr + col, sizeof(uint32_t));
-        }
-    }
-
-    // place the update on the outgoing queue
-    mux_queue_enqueue(&display->outgoing_messages, update);
-
-    // block on the signal.
-    // TODO: ensure this works because I'm not sure if this is guaranteed to wake up properly.
-    printf("RDPMUX: Now waiting on ack from other process\n");
-    pthread_cond_wait(&display->shm_cond, &display->shm_lock);
-    printf("RDPMUX: Ack received! Unlocking shm region and continuing\n----------\n");
-    pthread_mutex_unlock(&display->shm_lock);
-}
 
 /**
  * @func Checks whether the bounding box of the display update needs to be expanded, and does so if necessary.
@@ -69,30 +27,66 @@ static void mux_copy_update_to_shmem_region(MuxUpdate *update)
  */
 static void mux_expand_rect(MuxUpdate *update, int x, int y, int w, int h)
 {
-    printf("RDPMUX: Checking to see if we need to expand bounding box\n");
-    //update->x, update->y, update->w, update->h);
+    display_update *u = &update->disp_update;
 
-    display_update u = update->disp_update;
+    int new_x1 = x;
+    int new_y1 = y;
+    int new_x2 = x+w;
+    int new_y2 = y+h;
 
-    // bounding box checks
-    if ( (x + w) <= (u.x + u.w) &&
-         (y + h) <= (u.y + u.h) &&
-         (u.x <= x) && (x < (u.x + u.w)) &&
-         (u.y <= y) && (y < (u.y + u.h))) {
-        // new region already entirely enclosed, no need to do anything
-        printf("RDPMUX: Bounding box does not need to be updated.\n");
-        return;
-    } else {
-        int update_right_coord = u.x + u.w;
-        int new_right_coord = x + w;
-        u.w = MAX(update_right_coord, new_right_coord) - MIN(u.x, x);
-        int update_bottom_coord = u.y + u.h;
-        int new_bottom_coord = y + h;
-        u.h = MAX(update_bottom_coord, new_bottom_coord) - MIN(u.y, y);
-        u.x = MIN(u.x, x);
-        u.y = MIN(u.y, y);
-        printf("RDPMUX: Bounding box updated\n");
-    }
+    u->x1 = MIN(u->x1, new_x1);
+    u->y1 = MIN(u->y1, new_y1);
+    u->x2 = MAX(u->x2, new_x2);
+    u->y2 = MAX(u->y2, new_y2);
+}
+
+/**
+ * @func Copies a pixel region from one buffer to another. The two buffers are assumed to have the same subpixel
+ * layout and bpp. The function will transfer a given rectangle of certain dimension from the source buffer to
+ * a rectangle in the destination buffer with the same width and height, but not necessarily the same coordinates.
+ *
+ * @param dstData Pointer to the destination buffer. Assumed to be big enough to hold the data being copied into it.
+ * @param dstStep Scanline of dstData.
+ * @param xDst x-coordinate of the top-left corner of the destination rectangle.
+ * @param yDst y-coordinate of the top-left corner of the destination rectangle.
+ * @param width width of the rectangle in px.
+ * @param height height of the rectangle in px.
+ * @param srcData Pointer to the source buffer.
+ * @param srcStep Scanline of the source buffer.
+ * @param xSrc x-coordinate of the top-left corner of the source rectangle.
+ * @param ySrc y-coordinate of the top-left corner of the source rectangle.
+ * @param bpp Bits per pixel of the two buffers.
+ */
+static void mux_copy_pixels(unsigned char *dstData, int dstStep, int xDst, int yDst, int width, int height,
+                            unsigned char *srcData, int srcStep, int xSrc, int ySrc, int bpp)
+{
+	int lineSize;
+	int pixelSize;
+	unsigned char* pSrc;
+	unsigned char* pDst;
+	unsigned char* pEnd;
+
+	pixelSize = (bpp + 7) / 8;
+	lineSize = width * pixelSize;
+
+	pSrc = &srcData[(ySrc * srcStep) + (xSrc * pixelSize)];
+	pDst = &dstData[(yDst * dstStep) + (xDst * pixelSize)];
+
+
+    // when the source and destination rectangles are both strips
+    // of the framebuffer spanning the full width, it's much cheaper
+    // to do one memcpy rather than going line-by-line.
+	if ((srcStep == dstStep) && (lineSize == srcStep)) {
+		memcpy(pDst, pSrc, lineSize * height);
+	} else {
+		pEnd = pSrc + (srcStep * height);
+
+		while (pSrc < pEnd) {
+			memcpy(pDst, pSrc, lineSize);
+			pSrc += srcStep;
+			pDst += dstStep;
+		}
+	}
 }
 
 /**
@@ -109,15 +103,15 @@ static void mux_expand_rect(MuxUpdate *update, int x, int y, int w, int h)
  */
 __PUBLIC void mux_display_update(int x, int y, int w, int h)
 {
-    printf("RDPMUX: DCL display update event triggered.\n");
+    mux_printf("DCL display update event triggered");
     MuxUpdate *update;
     if (!display->dirty_update) {
         update = g_malloc0(sizeof(MuxUpdate));
         update->type = DISPLAY_UPDATE;
-        update->disp_update.x = x;
-        update->disp_update.y = y;
-        update->disp_update.w = w;
-        update->disp_update.h = h;
+        update->disp_update.x1 = x;
+        update->disp_update.y1 = y;
+        update->disp_update.x2 = x+w;
+        update->disp_update.y2 = y+h;
         display->dirty_update = update;
     } else {
         // update dirty bounding box
@@ -128,25 +122,21 @@ __PUBLIC void mux_display_update(int x, int y, int w, int h)
         mux_expand_rect(update, x, y, w, h);
     }
 
-    printf("RDPMUX: DCL display update event (%d, %d) %dx%d completed successfully.\n",
-                             x, y, w, h);
+    mux_printf("Bounding box updated to [(%d, %d), (%d, %d)]", update->disp_update.x1, update->disp_update.x2,
+           update->disp_update.x2, update->disp_update.y2);
 }
 
 /**
- * @func Public API function, to be called if the framebuffer surface changes in a user-facing way. For example, when the
- * display buffer resolution changes.
+ * @func Public API function, to be called if the framebuffer surface changes in a user-facing way; for example, when the
+ * display buffer resolution changes. In here, we create a new shared memory region for the framebuffer if necessary,
+ * and do a straight memcpy of the new framebuffer data into the space. We then enqueue a display switch event that
+ * contains the new shm region's information and the new dimensions of the display buffer.
  *
  * @param surface The new framebuffer display surface.
  */
 __PUBLIC void mux_display_switch(pixman_image_t *surface)
 {
-    // This callback is fired whenever the dimensions of the display buffer
-    // change in a user-facing noticeable way. In here, we create a new shared
-    // memory region for the framebuffer if necessary, and do a straight memcpy
-    // of the new framebuffer data into the space. We then enqueue a display
-    // switch event that contains the new shm region's information and the new
-    // dimensions of the display buffer.
-    printf("RDPMUX: DCL display switch event triggered.\n");
+    mux_printf("DCL display switch event triggered.");
 
     // save the pointers in our display struct for further use.
     display->surface = surface;
@@ -157,41 +147,35 @@ __PUBLIC void mux_display_switch(pixman_image_t *surface)
     // do all sorts of stuff to get the shmem region opened and ready
     const char *socket_fmt = "/%d.rdpmux";
     char socket_str[20] = ""; // 20 is a magic number carefully chosen
-    // to be the length of INT_MAX plus the characters
-    // in socket_fmt. If you change sockt_fmt, make
-    // sure to change this too.
-    int shm_size = 4096 * 2048 * sizeof(uint32_t); // rdp protocol has a max
-    // framebuffer size of
-    // 4096x2048.
+                              // to be the length of INT_MAX plus the characters
+                              // in socket_fmt. If you change socket_fmt, make
+                              // sure to change this too.
+    int shm_size = 4096 * 2048 * sizeof(uint32_t); // rdp protocol has max framebuffer size 4096x2048
     sprintf(socket_str, socket_fmt, display->vm_id);
 
-    // here begins the magic of setting up the shared memory region.
-    // It truly is magical. Because I don't know why it works.
-    // (j/k I know exactly why it works)
-    // this path only runs the first time a display switch event is received.
+    // set up the shm region. This path only runs the first time a display switch event is received.
     if (display->shmem_fd < 0) {
         // this is the shm buffer being created! Hooray!
         int shim_fd = shm_open(socket_str,
                                O_CREAT | O_EXCL | O_RDWR, S_IRUSR | S_IRGRP | S_IROTH);
         if (shim_fd < 0) {
-            printf("ERROR: shm_open failed: %s\n", strerror(errno));
+            mux_printf_error("shm_open failed: %s", strerror(errno));
             return;
         }
 
         // resize the newly created shm region to the size of the framebuffer
         if (ftruncate(shim_fd, shm_size)) {
-            printf("ERROR: ftruncate of new buffer failed: %s\n", strerror(errno));
+            mux_printf_error("ftruncate of new buffer failed: %s", strerror(errno));
             return;
         }
         // save our new shm file descriptor for later use
         display->shmem_fd = shim_fd;
-        //printf("DISPLAY: Our shmem file descriptor is %d\n", display->shmem_fd);
 
         // mmap the shm region into our process space
         void *shm_buffer = mmap(NULL, shm_size, PROT_READ | PROT_WRITE,
                                 MAP_SHARED, display->shmem_fd, 0);
         if (shm_buffer == MAP_FAILED) {
-            printf("ERROR: mmap failed: %s\n", strerror(errno));
+            mux_printf_error("mmap failed: %s", strerror(errno));
             return;
         }
 
@@ -210,7 +194,6 @@ __PUBLIC void mux_display_switch(pixman_image_t *surface)
     // clear the outgoing queues (all those old messages for the old display
     // are now totally invalid since we have a new display to work against)
     mux_queue_clear(&display->outgoing_messages);
-    mux_queue_clear(&display->display_buffer_updates);
 
     pthread_mutex_lock(&display->shm_lock);
     memcpy(display->shm_buffer, framebuf_data,
@@ -223,18 +206,92 @@ __PUBLIC void mux_display_switch(pixman_image_t *surface)
 
     // place our display switch update in the outgoing queue
     mux_queue_enqueue(&display->outgoing_messages, update);
-    printf("DISPLAY: DCL display switch callback completed successfully.\n");
+    mux_printf("DISPLAY: DCL display switch callback completed successfully.");
 }
 
 /**
  * @func Public API function, to be called when the framebuffer display refreshes.
+ *
+ * This function attempts to lock the shared memory region, and if it succeeds, will sync the framebuffer
+ * to the shared memory and copy the current dirty update for transmission.
  */
 __PUBLIC void mux_display_refresh()
 {
     if (display->dirty_update) {
-        mux_queue_enqueue(&display->display_buffer_updates, display->dirty_update);
-        printf("RDPMUX: Refresh queued to RDP server process.\n");
-        display->dirty_update = NULL;
+        if (pthread_mutex_trylock(&display->shm_lock) == 0) {
+            int pixelSize;
+            size_t x = 0;
+            size_t y = 0;
+            size_t w = 0;
+            size_t h = 0;
+            display_update* u;
+            size_t surfaceWidth = pixman_image_get_width(display->surface);
+            size_t surfaceHeight = pixman_image_get_height(display->surface);
+            int bpp = PIXMAN_FORMAT_BPP(pixman_image_get_format(display->surface));
+            unsigned char* srcData = (unsigned char*) pixman_image_get_data(display->surface);
+            unsigned char* dstData = (unsigned char*) display->shm_buffer;
+
+            mux_printf("Now copying framebuffer to shmem region");
+
+            u = &display->dirty_update->disp_update;
+
+            // align the bounding box to 16 for memory alignment purposes
+            if (u->x1 % 16) {
+                u->x1 -= (u->x1 % 16);
+            }
+
+            if (u->y1 % 16) {
+                u->y1 -= (u->y1 % 16);
+            }
+
+            if (u->x2 % 16) {
+                u->x2 += 16 - (u->x2 % 16);
+            }
+
+            if (u->y2 % 16) {
+                u->y2 += 16 - (u->y2 % 16);
+            }
+
+            if (u->x2 > surfaceWidth) {
+                u->x2 = surfaceWidth;
+            }
+
+            if (u->y2 > surfaceHeight) {
+                u->y2 = surfaceHeight;
+            }
+
+            y = u->y1;
+            h = u->y2 - u->y1;
+
+            pixelSize = (bpp + 7) / 8;
+
+            // aligning the copy offsets does not yield a good performance gain,
+            // but copying contiguous memory blocks makes a huge difference.
+            // by forcing copying of full lines on buffers with the same step,
+            // we can use a single memcpy rather than one memcpy per line.
+            // this may over-copy a bit sometimes, but it's still way cheaper.
+            x = 0;
+            w = surfaceWidth;
+
+            mux_copy_pixels(dstData, w * pixelSize, x, y, w, h, srcData, w * pixelSize, x, y, bpp);
+
+            if (display->out_update == NULL) {
+                mux_printf("Copying dirty update to out update");
+                display->out_update = g_memdup(display->dirty_update, sizeof(MuxUpdate));
+            } else {
+                mux_printf("Calculating new out update bounds");
+                display_update *u = &display->dirty_update->disp_update;
+                mux_expand_rect(display->out_update, u->x1, u->y1, u->x2 - u->x1, u->y2 - u->y1);
+            }
+
+            g_free(display->dirty_update);
+            display->dirty_update = NULL;
+
+            pthread_cond_signal(&display->update_cond);
+            pthread_mutex_unlock(&display->shm_lock);
+        }
+    } else {
+        mux_printf("Refresh deferred");
     }
 }
 
@@ -243,80 +300,90 @@ __PUBLIC void mux_display_refresh()
  */
 
 /**
- * @func This function manages outbound communication. It is designed to be a thread runloop, and should be
- * dispatched as a runnable inside a separate thread during library initialization. Its function prototype
- * matches what pthreads et al. expect.
+ * @func Outgoing message loop. It is designed to be run as a thread runloop, and should be dispatched as a runnable
+ * inside a separate thread during library initialization. Its function prototype matches what pthreads et al. expect.
+ *
+ * This function queues outgoing messages, and blocks waiting for the server to copy data out of the shared memory
+ * region and return an ack message to the library. This ensures that the library and server are not accessing the shared
+ * memory concurrently.
  */
 __PUBLIC void mux_out_loop()
 {
-    size_t len;
-
-    //printf("LIBSHIM: Reached shim out loop thread!\n");
     while(true) {
-        nnStr msg;
-        msg.buf = NULL;
-        //buf = NULL;
-        printf("RDPMUX: Waiting for update in out loop\n");
-        MuxUpdate *update = (MuxUpdate *) mux_queue_dequeue(&display->outgoing_messages); // blocks until something in queue
-        len = mux_write_outgoing_msg(update, &msg); // serialize update to buf
-        while (mux_nn_send_msg(display->nn_sock, msg.buf, len) < 0) {
-            printf("ERROR: Something went wrong in nn_send: %s\n", nn_strerror(nn_errno()));
+        pthread_mutex_lock(&display->shm_lock);
+        while (display->out_update == NULL) {
+            pthread_cond_wait(&display->update_cond, &display->shm_lock);
         }
-        printf("RDPMUX: Update sent to server process!\n");
-        g_free(update); // update is no longer needed, free it
-        g_free(msg.buf); // free buf, no longer needed.
+
+        // place the update on the outgoing queue
+        mux_queue_enqueue(&display->outgoing_messages, display->out_update);
+        display->out_update = NULL;
+        mux_printf("out_update qeueued and reset!");
+
+        // block on the signal.
+        mux_printf("Now waiting on ack from other process");
+        pthread_cond_wait(&display->shm_cond, &display->shm_lock);
+        mux_printf("Ack received! Unlocking shm region and continuing\n----------");
+        pthread_mutex_unlock(&display->shm_lock);
     }
 }
 
 /**
- * @func This function manages display buffer updates. It is designed to be a thread runloop, and should be
- * dispatched as a runnable inside a separate thread during library initialization. Its function prototype
- * matches what pthreads et al. expect.
+ * @func Unused, stubbed out until formal removal.
  *
  * @param arg Not at all used, just there to satisfy pthreads.
  */
 __PUBLIC void *mux_display_buffer_update_loop(void *arg)
 {
-    printf("RDPMUX: Reached shim display buffer update thread!\n");
-    // init queue
-    SIMPLEQ_INIT(&display->display_buffer_updates.updates);
-
-    while(1) {
-        printf("RDPMUX: Dequeueing update in buffer update loop now\n");
-        MuxUpdate *update = (MuxUpdate *) mux_queue_dequeue(&display->display_buffer_updates);
-        if (update->type == DISPLAY_UPDATE) {
-            mux_copy_update_to_shmem_region(update); // will block until we receive ack
-        } else {
-            printf("ERROR: Wrong type of update queued on outgoing updates queue\n");
-        }
-    }
     return NULL;
 }
 
 /**
- * @func This function manages inbound communication to the library. It is designed to be a thread runloop, and should be
- * dispatched as a runnable inside a separate thread during library initialization. Its function prototype
+ * @func This function manages communication to and from the library. It is designed to be a thread runloop, and should
+ * be dispatched as a runnable inside a separate thread during library initialization. Its function prototype
  * matches what pthreads et al. expect.
  *
  * @param arg void pointer to anything. Not used by the function in any way, just there to satisfy pthreads.
  */
 __PUBLIC void *mux_mainloop(void *arg)
 {
-    printf("RDPMUX: Reached qemu shim in loop thread!\n");
-    void *buf;
-
-    // init recv queue
-    //QSIMPLEQ_INIT(&display->incoming_messages->updates);
+    mux_printf("Reached qemu shim in loop thread!");
+    void *buf = NULL;
+    size_t len;
+    zpoller_t *poller = display->zmq.poller;
 
     // main shim receive loop
     int nbytes;
     while(1) {
+        nnStr msg;
+        msg.buf = NULL;
         buf = NULL;
-        nbytes = mux_nn_recv_msg(display->nn_sock, &buf);
-        if (nbytes > 0) {
-            // successful recv is successful
-            //printf("NANOMSG: We have received a message of size %d bytes!\n", nbytes);
-            mux_process_incoming_msg(buf, nbytes);
+
+        while(!mux_queue_check_is_empty(&display->outgoing_messages)) {
+            MuxUpdate *update = (MuxUpdate *) mux_queue_dequeue(&display->outgoing_messages); // blocks until something in queue
+            len = mux_write_outgoing_msg(update, &msg); // serialize update to buf
+            while (mux_0mq_send_msg(msg.buf, len) < 0) {
+                mux_printf_error("Failed to send message");
+            }
+            g_free(update); // update is no longer needed, free it
+            g_free(msg.buf); // free buf, no longer needed.
+            msg.buf = NULL;
+        }
+
+        // block on receiving messages
+        zsock_t *which = (zsock_t *) zpoller_wait(poller, 5); // 5ms timeout
+        if (which != display->zmq.socket)  {
+            if (zpoller_terminated(poller)) {
+                mux_printf_error("Zpoller terminated!");
+                return NULL;
+            }
+        } else {
+            nbytes = mux_0mq_recv_msg(&buf);
+            if (nbytes > 0) {
+                // successful recv is successful
+                mux_printf("We have received a message of size %d bytes!", nbytes);
+                mux_process_incoming_msg(buf, nbytes);
+            }
         }
     }
     return NULL;
@@ -329,7 +396,6 @@ __PUBLIC void *mux_mainloop(void *arg)
  */
 static void mux_init_queue(MuxMsgQueue *q)
 {
-    printf("RDPMUX: Now initializing a queue!\n");
     SIMPLEQ_INIT(&q->updates);
     pthread_cond_init(&q->cond, NULL);
     pthread_mutex_init(&q->lock, NULL);
@@ -343,20 +409,21 @@ static void mux_init_queue(MuxMsgQueue *q)
  */
 __PUBLIC MuxDisplay *mux_init_display_struct(const char *uuid)
 {
-    printf("RDPMUX: Now initializing display struct\n");
     display = g_malloc0(sizeof(MuxDisplay));
     display->shmem_fd = -1;
     display->dirty_update = NULL;
+    display->out_update = NULL;
     display->uuid = NULL;
+    display->zmq.socket = NULL;
 
     if (uuid != NULL) {
         if (strlen(uuid) != 36) {
-            printf("ERROR: Invalid UUID passed to mux_init_display_struct()\n");
+            mux_printf_error("Invalid UUID");
             free(display);
             return NULL;
         }
         if ((display->uuid = strdup(uuid)) == NULL) {
-            printf("ERROR: String copy failed: %s\n", strerror(errno));
+            mux_printf_error("String copy failed: %s", strerror(errno));
             free(display);
             return NULL;
         }
@@ -366,9 +433,9 @@ __PUBLIC MuxDisplay *mux_init_display_struct(const char *uuid)
 
     pthread_cond_init(&display->shm_cond, NULL);
     pthread_mutex_init(&display->shm_lock, NULL);
+    pthread_cond_init(&display->update_cond, NULL);
 
     mux_init_queue(&display->outgoing_messages);
-    mux_init_queue(&display->display_buffer_updates);
 
     return display;
 }
@@ -380,4 +447,33 @@ __PUBLIC MuxDisplay *mux_init_display_struct(const char *uuid)
 __PUBLIC void mux_register_event_callbacks(InputEventCallbacks cb)
 {
     callbacks = cb;
+}
+
+/**
+ * @func Should be called to safely cleanup library state. Note that ZeroMQ threads may (will) hang around for a long
+ * time unless they're cleaned up by this method.
+ */
+__PUBLIC void mux_cleanup(MuxDisplay *display)
+{
+    mux_printf("Now cleaning up librdpmux struct");
+    if (display == NULL) {
+        mux_printf_error("Invalid MuxDisplay pointer");
+        return;
+    }
+    // clean up queues
+    mux_queue_clear(&display->outgoing_messages);
+
+    // clean up uuid
+    g_free(&display->uuid);
+
+    // clean up socket
+    zpoller_destroy(&display->zmq.poller);
+    zsock_set_linger(&display->zmq.socket, 0);
+    zsock_disconnect(display->zmq.socket, "%s", display->zmq.path);
+    zsock_destroy(&display->zmq.socket);
+
+    // clean up conds/mutexes
+    pthread_cond_destroy(&display->shm_cond);
+    pthread_mutex_destroy(&display->shm_lock);
+    pthread_cond_destroy(&display->update_cond);
 }

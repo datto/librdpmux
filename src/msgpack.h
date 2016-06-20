@@ -6,7 +6,6 @@
 #define SHIM_MSGPACK_H
 
 #include <malloc.h>
-#include <nanomsg/nn.h>
 
 #include "common.h"
 #include "lib/c-msgpack.h"

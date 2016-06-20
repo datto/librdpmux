@@ -10,6 +10,8 @@
 #include <stdint.h>
 #include <unistd.h>
 
+#include <czmq.h>
+
 #include <glib.h>
 #include <pixman.h>
 
@@ -25,6 +27,22 @@
  * @brief Protocol version.
  */
 #define RDPMUX_PROTOCOL_VERSION 2
+
+/**
+ * @brief debug output macro
+ */
+#ifdef USE_DEBUG_OUTPUT
+#define mux_printf(x, ...) fprintf(stdout, "DEBUG:   %s:%d: " x "\n", \
+                            __func__, __LINE__, ##__VA_ARGS__);
+#else
+#define mux_printf(x, ...) ;
+#endif
+
+/**
+ * @brief error output macro
+ */
+#define mux_printf_error(x, ...) fprintf(stderr, "ERROR:   %s:%d: " x "\n", \
+                            __func__, __LINE__, ##__VA_ARGS__);
 
 /**
  * @brief This struct is populated by the code using the library to provide callbacks for mouse and keyboard events.
@@ -53,25 +71,25 @@ typedef enum message_type {
  * @brief Parameters for a display update event.
  *
  * Display updates carry coordinates for a rectangular screen region, denoted as the coordinates of the top left corner
- * along with the width and height of the rectangle. All values are in px.
+ * and the coordinates of the bottom right corner. All values are in px.
  */
 typedef struct display_update {
     /**
      * @brief X-coordinate of top left corner of region
      */
-    int x;
+    int x1;
     /**
      * @brief Y-coordinate of top left corner of region
      */
-    int y;
+    int y1;
     /**
-     * @brief width of region
+     * @brief X-coordinate of bottom right corner of region
      */
-    int w;
+    int x2;
     /**
-     * @brief height of region
+     * @brief X-coordinate of bottom right corner of region
      */
-    int h;
+    int y2;
 } display_update;
 
 /**
@@ -186,9 +204,10 @@ typedef struct MuxMsgQueue {
  */
 struct mux_display {
     /**
-     * @brief pointer to the framebuffer surface in memory.
+     * @brief pointer to the QEMU framebuffer surface.
      */
     pixman_image_t *surface;
+
     /**
      * @brief Internal ID of the virtual machine
      */
@@ -206,9 +225,15 @@ struct mux_display {
      */
     MuxUpdate *dirty_update;
     /**
-     * @brief Nanomsg socket descriptor.
+     * @brief Current outgoing update
      */
-    int nn_sock;
+    MuxUpdate *out_update;
+
+    struct {
+        zsock_t *socket;
+        zpoller_t *poller;
+        const char *path;
+    } zmq;
 
     /**
      * @brief Externally passed UUID of the VM.
@@ -225,13 +250,20 @@ struct mux_display {
     pthread_mutex_t shm_lock;
 
     /**
+     * @brief Condition variable associated with outgoing update.
+     */
+    pthread_cond_t update_cond;
+
+    /**
+     * @brief Lock guarding access to the stop variable.
+     */
+    pthread_mutex_t stop_lock;
+    bool stop;
+
+    /**
      * @brief Outgoing message queue.
      */
     MuxMsgQueue outgoing_messages;
-    /**
-     * @brief Display buffer update queue.
-     */
-    MuxMsgQueue display_buffer_updates;
 };
 typedef struct mux_display MuxDisplay;
 

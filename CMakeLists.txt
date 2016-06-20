@@ -17,8 +17,16 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${GENERAL_WARNING_FLAGS} ${GENERAL_COMPILER_
 set(CMAKE_C_FLAGS_DEBUG "${GENERAL_DEBUG_FLAGS}")
 set(CMAKE_C_FLAGS_RELEASE "${GENERAL_RELEASE_FLAGS}")
 
+# Add debug output for debug builds
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+         add_definitions(-DUSE_DEBUG_OUTPUT)
+endif(CMAKE_BUILD_TYPE MATCHES Debug)
+if(CMAKE_BUILD_TYPE MATCHES RelWithDebInfo)
+    add_definitions(-DUSE_DEBUG_OUTPUT)
+endif(CMAKE_BUILD_TYPE MATCHES RelWithDebInfo)
+
 include(GNUInstallDirs)
-file(GLOB_RECURSE SHIM_SOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c")
+file(GLOB_RECURSE SHIM_SOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c" "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h")
 
 add_library(rdpmux SHARED "${SHIM_SOURCE_FILES}")
 
@@ -36,22 +44,31 @@ install(FILES
 install(FILES
         "${CMAKE_CURRENT_SOURCE_DIR}/librdpmux.pc" DESTINATION "${CMAKE_INSTALL_FULL_LIBDIR}/pkgconfig")
 
-find_package(Glib2)
+find_package(Glib2 REQUIRED)
 if(GLIB2_FOUND)
     include_directories(${GLIB2_INCLUDE_DIRS})
     target_link_libraries(rdpmux ${GLIB2_LIBRARIES})
 endif(GLIB2_FOUND)
 
-find_package(GIO)
+find_package(GIO REQUIRED)
 if(GIO_FOUND)
     include_directories(${GIO_INCLUDE_DIR})
     target_link_libraries(rdpmux ${GIO_LIBRARIES})
 endif(GIO_FOUND)
 
-find_package(Nanomsg)
-target_link_libraries(rdpmux ${NANOMSG_LIBRARY})
+find_package(ZeroMQ REQUIRED)
+if(ZEROMQ_FOUND)
+    include_directories(rdpmux ${ZEROMQ_INCLUDE_DIRS})
+    target_link_libraries(rdpmux ${ZEROMQ_LIBRARIES})
+endif(ZEROMQ_FOUND)
 
-find_package(Pixman)
+find_package(CZMQ REQUIRED)
+if(CZMQ_FOUND)
+    include_directories(rdpmux ${CZMQ_INCLUDE_DIRS})
+    target_link_libraries(rdpmux ${CZMQ_LIBRARIES})
+endif(CZMQ_FOUND)
+
+find_package(Pixman REQUIRED)
 target_link_libraries(rdpmux ${PIXMAN_LIBRARY})
 include_directories(${PIXMAN_INCLUDE_DIR})
 
