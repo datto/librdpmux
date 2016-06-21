@@ -77,6 +77,14 @@ int mux_0mq_send_msg(void *buf, size_t len)
     return len;
 }
 
+
+static void mux_handler(int signal_value)
+{
+    mux_printf("ZSYS signal handler called");
+    zctx_interrupted = 1;
+    zsys_interrupted = 1;
+}
+
 /**
  * @brief Connects to the 0mq socket on path.
  *
@@ -91,6 +99,7 @@ __PUBLIC bool mux_connect(const char *path)
 {
     display->zmq.path = path;
     display->zmq.socket = zsock_new_dealer(path);
+    zsys_handler_set(mux_handler);
     if (display->zmq.socket == NULL) {
         mux_printf_error("0mq socket creation failed");
         return false;

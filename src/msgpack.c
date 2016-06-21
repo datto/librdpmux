@@ -272,6 +272,15 @@ static void mux_write_outgoing_switch_msg(cmp_ctx_t *cmp, MuxUpdate *update)
         mux_printf_error("Something went wrong writing h");
 }
 
+static void mux_write_outgoing_shutdown_msg(cmp_ctx_t *cmp)
+{
+    if (!cmp_write_array(cmp, 1))
+        mux_printf_error("Something went wrong writing array specifier");
+
+    if (!cmp_write_uint(cmp, SHUTDOWN))
+        mux_printf_error("Something went wrong writing update type");
+}
+
 /**
  * @brief Writes an outgoing event to a msgpack-encoded message.
  *
@@ -288,6 +297,11 @@ size_t mux_write_outgoing_msg(MuxUpdate *update, nnStr *msg)
     //nnStr msg;
     mux_nnstr_init(msg, msg->buf, 0);
     cmp_init(&cmp, msg, mux_msg_reader, mux_msg_writer);
+
+    if (update == NULL) {
+        mux_write_outgoing_shutdown_msg(&cmp);
+        return msg->size;
+    }
 
     if (update->type == DISPLAY_UPDATE) {
         mux_write_outgoing_update_msg(&cmp, update);

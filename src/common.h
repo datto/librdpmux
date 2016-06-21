@@ -159,6 +159,13 @@ typedef struct update_ack {
 } update_ack;
 
 /**
+ * @brief Parameters for a shutdown event.
+ */
+typedef struct shut_down {
+    bool shutting_down;
+} shut_down;
+
+/**
  * @brief Object to hold information about the various types of events.
  *
  * The MuxUpdate struct can can hold exactly one of one type of event. They are designed to be held in queues.
@@ -182,6 +189,7 @@ typedef struct MuxUpdate {
         kb_update kb;
         mouse_update mouse;
         update_ack ack;
+        shut_down shutdown;
     };
 } MuxUpdate;
 

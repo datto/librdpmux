@@ -280,7 +280,6 @@ __PUBLIC void mux_display_refresh()
                 display->out_update = g_memdup(display->dirty_update, sizeof(MuxUpdate));
             } else {
                 mux_printf("Calculating new out update bounds");
-                display_update *u = &display->dirty_update->disp_update;
                 mux_expand_rect(display->out_update, u->x1, u->y1, u->x2 - u->x1, u->y2 - u->y1);
             }
 
@@ -291,7 +290,7 @@ __PUBLIC void mux_display_refresh()
             pthread_mutex_unlock(&display->shm_lock);
         }
     } else {
-        mux_printf("Refresh deferred");
+//        mux_printf("Refresh deferred");
     }
 }
 
@@ -310,10 +309,29 @@ __PUBLIC void mux_display_refresh()
 __PUBLIC void mux_out_loop()
 {
     while(true) {
+
+        // check if exiting
+        pthread_mutex_lock(&display->stop_lock);
+        if (display->stop) break;
+        pthread_mutex_unlock(&display->stop_lock);
+
         pthread_mutex_lock(&display->shm_lock);
         while (display->out_update == NULL) {
+
+            // check if exiting
+            pthread_mutex_lock(&display->stop_lock);
+            if (display->stop) {
+                goto cleanup;
+            }
+            pthread_mutex_unlock(&display->stop_lock);
+
             pthread_cond_wait(&display->update_cond, &display->shm_lock);
         }
+
+        // check if exiting
+        pthread_mutex_lock(&display->stop_lock);
+        if (display->stop) break;
+        pthread_mutex_unlock(&display->stop_lock);
 
         // place the update on the outgoing queue
         mux_queue_enqueue(&display->outgoing_messages, display->out_update);
@@ -323,9 +341,19 @@ __PUBLIC void mux_out_loop()
         // block on the signal.
         mux_printf("Now waiting on ack from other process");
         pthread_cond_wait(&display->shm_cond, &display->shm_lock);
+
+        // check if exiting
+        pthread_mutex_lock(&display->stop_lock);
+        if (display->stop) break;
+        pthread_mutex_unlock(&display->stop_lock);
+
         mux_printf("Ack received! Unlocking shm region and continuing\n----------");
         pthread_mutex_unlock(&display->shm_lock);
     }
+cleanup:
+    pthread_mutex_unlock(&display->shm_lock);
+    mux_printf("Now exiting out loop!");
+    return;
 }
 
 /**
@@ -336,6 +364,19 @@ __PUBLIC void mux_out_loop()
 __PUBLIC void *mux_display_buffer_update_loop(void *arg)
 {
     return NULL;
+}
+
+
+static void mux_send_shutdown_msg()
+{
+    nnStr msg;
+    msg.buf = NULL;
+    size_t len = mux_write_outgoing_msg(NULL, &msg); // NULL means shutdown!
+    while(mux_0mq_send_msg(msg.buf, len) < 0) {
+        mux_printf_error("Failed to send shutdown message!");
+    }
+    g_free(msg.buf);
+    mux_printf("Shutdown message sent!");
 }
 
 /**
@@ -351,10 +392,11 @@ __PUBLIC void *mux_mainloop(void *arg)
     void *buf = NULL;
     size_t len;
     zpoller_t *poller = display->zmq.poller;
+    bool stopping = false;
 
     // main shim receive loop
     int nbytes;
-    while(1) {
+    while(!stopping) {
         nnStr msg;
         msg.buf = NULL;
         buf = NULL;
@@ -375,7 +417,7 @@ __PUBLIC void *mux_mainloop(void *arg)
         if (which != display->zmq.socket)  {
             if (zpoller_terminated(poller)) {
                 mux_printf_error("Zpoller terminated!");
-                return NULL;
+                stopping = true;
             }
         } else {
             nbytes = mux_0mq_recv_msg(&buf);
@@ -385,7 +427,34 @@ __PUBLIC void *mux_mainloop(void *arg)
                 mux_process_incoming_msg(buf, nbytes);
             }
         }
+
+        pthread_mutex_lock(&display->stop_lock);
+        if (display->stop) {
+            stopping = true;
+        }
+        pthread_mutex_unlock(&display->stop_lock);
     }
+
+    // cleanup
+    mux_printf("Cleaning up!");
+    pthread_mutex_unlock(&display->stop_lock);
+
+    // clean up queues
+    mux_queue_clear(&display->outgoing_messages);
+
+    // send shutdown msg
+    mux_send_shutdown_msg();
+
+    // clean up socket
+    if (!zpoller_terminated(display->zmq.poller)) {
+        zpoller_destroy(&display->zmq.poller);
+    }
+//    zsock_set_linger(display->zmq.socket, 1);
+    zsock_disconnect(display->zmq.socket, "%s", display->zmq.path);
+    zsock_destroy(&display->zmq.socket);
+    // signal to wake up other thread
+    pthread_cond_signal(&display->update_cond);
+    pthread_cond_signal(&display->shm_cond);
     return NULL;
 }
 
@@ -453,27 +522,18 @@ __PUBLIC void mux_register_event_callbacks(InputEventCallbacks cb)
  * @func Should be called to safely cleanup library state. Note that ZeroMQ threads may (will) hang around for a long
  * time unless they're cleaned up by this method.
  */
-__PUBLIC void mux_cleanup(MuxDisplay *display)
+__PUBLIC void mux_cleanup(MuxDisplay *d)
 {
     mux_printf("Now cleaning up librdpmux struct");
-    if (display == NULL) {
+    if (d == NULL) {
         mux_printf_error("Invalid MuxDisplay pointer");
         return;
     }
-    // clean up queues
-    mux_queue_clear(&display->outgoing_messages);
 
-    // clean up uuid
-    g_free(&display->uuid);
+    pthread_mutex_lock(&display->stop_lock);
+    display->stop = true;
+    pthread_mutex_unlock(&display->stop_lock);
 
-    // clean up socket
-    zpoller_destroy(&display->zmq.poller);
-    zsock_set_linger(&display->zmq.socket, 0);
-    zsock_disconnect(display->zmq.socket, "%s", display->zmq.path);
-    zsock_destroy(&display->zmq.socket);
-
-    // clean up conds/mutexes
-    pthread_cond_destroy(&display->shm_cond);
-    pthread_mutex_destroy(&display->shm_lock);
-    pthread_cond_destroy(&display->update_cond);
+//    // clean up uuid
+//    g_free(&display->uuid);
 }
