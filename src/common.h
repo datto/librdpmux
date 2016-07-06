@@ -156,6 +156,10 @@ typedef struct update_ack {
      * @brief whether the update succeeded.
      */
     bool success;
+    /**
+     * @brief new target framerate for the guest.
+     */
+    uint32_t framerate;
 } update_ack;
 
 /**
@@ -247,6 +251,11 @@ struct mux_display {
      * @brief Externally passed UUID of the VM.
      */
     const char *uuid;
+
+    /**
+     * @brief current framerate target of the VM guest. Comes from the server.
+     */
+    uint32_t framerate;
 
     /**
      * @brief Condition variable associated with shared memory region.

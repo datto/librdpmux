@@ -165,6 +165,23 @@ static void mux_process_incoming_mouse_msg(cmp_ctx_t *cmp, nnStr *msg)
     callbacks.mux_receive_mouse(mouse_x, mouse_y, flags);
 }
 
+static void mux_process_incoming_complete_msg(cmp_ctx_t *cmp, nnStr *msg)
+{
+    uint32_t new_framerate;
+    bool success;
+    if (!cmp_read_bool(cmp, &success)) {
+        mux_printf_error("success variable didn't work");
+        return;
+    }
+
+    if (!cmp_read_uint(cmp, &new_framerate)) {
+        mux_printf_error("couldn't read framerate");
+        return;
+    }
+
+    display->framerate = new_framerate;
+}
+
 /**
  * @brief Serializes incoming raw data into cmp struct for processing and invokes correct deserialization function
  * for type of message received.
@@ -206,6 +223,7 @@ void mux_process_incoming_msg(void *buf, int nbytes)
             break;
         case DISPLAY_UPDATE_COMPLETE:
             mux_printf("Signaling shm_cond for DISPLAY_UPDATE_COMPLETE wakeup");
+            mux_process_incoming_complete_msg(&cmp, &msg);
             pthread_cond_signal(&display->shm_cond);
             break;
         default:

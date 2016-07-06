@@ -130,9 +130,12 @@ __PUBLIC void mux_display_update(int x, int y, int w, int h)
  * @func Public API function, to be called if the framebuffer surface changes in a user-facing way; for example, when the
  * display buffer resolution changes. In here, we create a new shared memory region for the framebuffer if necessary,
  * and do a straight memcpy of the new framebuffer data into the space. We then enqueue a display switch event that
- * contains the new shm region's information and the new dimensions of the display buffer.
+ * contains the new shm region's information and the new dimensions of the display buffer. Finally, we notify the outside
+ * about the new target framerate we'd like
  *
  * @param surface The new framebuffer display surface.
+ *
+ * @returns Target framerate for the VM guest.
  */
 __PUBLIC void mux_display_switch(pixman_image_t *surface)
 {
@@ -215,7 +218,7 @@ __PUBLIC void mux_display_switch(pixman_image_t *surface)
  * This function attempts to lock the shared memory region, and if it succeeds, will sync the framebuffer
  * to the shared memory and copy the current dirty update for transmission.
  */
-__PUBLIC void mux_display_refresh()
+__PUBLIC uint32_t mux_display_refresh()
 {
     if (display->dirty_update) {
         if (pthread_mutex_trylock(&display->shm_lock) == 0) {
@@ -292,6 +295,7 @@ __PUBLIC void mux_display_refresh()
     } else {
 //        mux_printf("Refresh deferred");
     }
+    return (uint32_t) (1000 / display->framerate);
 }
 
 /*
@@ -484,6 +488,7 @@ __PUBLIC MuxDisplay *mux_init_display_struct(const char *uuid)
     display->out_update = NULL;
     display->uuid = NULL;
     display->zmq.socket = NULL;
+    display->framerate = 20;
 
     if (uuid != NULL) {
         if (strlen(uuid) != 36) {

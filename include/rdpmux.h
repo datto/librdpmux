@@ -20,7 +20,7 @@ typedef struct mux_display MuxDisplay;
 
 void mux_display_update(int x, int y, int w, int h);
 void mux_display_switch(pixman_image_t *surface);
-void mux_display_refresh();
+uint32_t mux_display_refresh();
 
 void *mux_mainloop(void *arg);
 void mux_out_loop();
