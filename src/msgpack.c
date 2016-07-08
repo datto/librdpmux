@@ -167,10 +167,15 @@ static void mux_process_incoming_mouse_msg(cmp_ctx_t *cmp, nnStr *msg)
 
 static void mux_process_incoming_complete_msg(cmp_ctx_t *cmp, nnStr *msg)
 {
-    uint32_t new_framerate;
-    bool success;
-    if (!cmp_read_bool(cmp, &success)) {
+    uint32_t new_framerate, success;
+
+    if (!cmp_read_uint(cmp, &success)) {
         mux_printf_error("success variable didn't work");
+        return;
+    }
+
+    if (success != 1) {
+        mux_printf_error("Unsuccessful update_complete");
         return;
     }
 
