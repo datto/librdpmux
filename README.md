@@ -39,13 +39,12 @@ The initialization functions are responsible for starting up all the data struct
 
 There are also three loop functions. The library is mainly driven by these loops, and all three need to be running for the library to be working. These loops are:
 
-1. `mux_mainloop()` receives events from the server
-2. `mux_display_buffer_update_loop()` manages display updates and coalesces them for transmission
-3. `mux_out_loop()` sends messages to the server
+1. `mux_mainloop()` manages communication to and from the server, including sending and receiving messages.
+3. `mux_out_loop()` synchronizes access to the shared memory region containing the framebuffer of the backend.
 
 #### Inbound Communication
 
-Inbound communication functions are registered as callbacks in the `InputEventCallbacks` struct and passed into the library. These functions are called when the library receives an event and needs to pass it up to the hypervisor. Right now, the only two things that the library supports are mouse and keyboard events. Currently, `InputEventCallbacks` looks like this:
+Inbound communication functions are registered as callbacks in the `InputEventCallbacks` struct and passed into the library. These functions are called when the library receives an event and needs to pass it down into the hypervisor. Right now, the only two things that the library supports are mouse and keyboard events. Currently, `InputEventCallbacks` looks like this:
 ```C
 typedef struct InputEventCallbacks {
     void (*mux_receive_kb)(uint32_t keycode, uint32_t flags);
@@ -55,10 +54,10 @@ typedef struct InputEventCallbacks {
 
 Hopefully this looks pretty self-explanatory. Further information is available in the Doxygen documentation.
 
-#### Outbound Communication
-Outbound communication functions are used to transfer information and state from the hypervisor to the library for transmission to the RDPMux server. Currently the library supports sending framebuffer changes and startup/shutdown messages. As the feature set grows, expect more functions to be added in the future. Currently, the functions are:
+#### Managing the Framebuffer
+These three functions are meant to handle various stages of the display update lifecycle. They are designed to be called by the backend at the appropriate points in its display update cycle. 
 
-1. `mux_display_update()` is meant to be called when a region of the framebuffer updates
+1. `mux_display_update()` is meant to be called when a region of the framebuffer updates.
 2. `mux_display_refresh()` is meant to be called every time the virtual display refreshes.
 3. `mux_display_switch()` is meant to be called when the framebuffer changes is a big way: subpixel layout change, resolution change, etc.
 
@@ -68,26 +67,30 @@ Outbound communication functions are used to transfer information and state from
 First, initialize the library's data structures by calling `mux_init_display_struct()`. This sets up all the internal data structures, but doesn't start anything up yet. This function returns a pointer to the main display struct set up by the library for its internal usage. You can choose to keep it around, though that provides very little advantage currently.
 
 #### Service Registration
-Registration and initialization of the communications portion of the library is done in two parts. You first get your socket path from the RDPMux server by calling `mux_get_socket_path()`. This gives you a file path to the private Nanomsg socket used for communication with your VM's personal RDP server.
+Registration and initialization of the communications portion of the library is done in two parts. You first get your socket path from the RDPMux server by calling `mux_get_socket_path()`. This gives you a file path to the private ZeroMQ socket used for communication with your VM's personal RDP server.
 
-Next, you want to call `mux_connect()` to actually connect to the Nanomsg socket.
+Next, you want to call `mux_connect()` to actually connect to the ZeroMQ socket. After this point, the communications are fully setup and ready to go.
 
 #### Register Callback Functions
-Mouse and keyboard events are delivered to the backend service via callback functions set via `mux_register_event_callbacks()`. The caller needs to create their own callback functions to handle incoming mouse and keyboard events, and pass them in via an `InputEventCallbacks` struct.
+Mouse and keyboard events are delivered to the backend service via callback functions set via `mux_register_event_callbacks()`. The backend needs to create its own callback functions to handle incoming mouse and keyboard events, and pass them in via an `InputEventCallbacks` struct.
 
 #### Starting the loops
-To actually start the library's functionality, you need to spin up the three loop functions. These are: `mux_mainloop()`, `mux_out_loop()`, and `mux_display_buffer_update_loop()`. As a caveat: these functions all contain infinite loops that block until they are needed. If you see that one of these loops is using 100% CPU, chances are you missed one of the steps above.
+To actually start the library's functionality, you need to spin up the two loop functions. These are: `mux_mainloop()` and `mux_display_buffer_update_loop()`. As a caveat: these functions contain infinite loops that block until they are needed.
+
 Once you start these three loops up, the library will be fully operational and should require no other babysitting. 
 
+#### Shutting Down the Library
+When terminating or shutting down the library/backend, the `mux_cleanup()` function must be called so that the library can shut itself down properly. Threads will be terminated, the socket will be disconnected and destroyd safely, and a shutdown message will be sent to the frontend. If you don't call this, there is a very high chance the backend will be held open by ZeroMQ for ten seconds, or perhaps not close at all. 
+
 ## Protocol
-RDPMux uses DBus for service registration, and Msgpack-encoded messages over a private socket for service communication.
+RDPMux uses DBus for service registration, and Msgpack-encoded messages over ZeroMQ for service communication.
 
 ### DBus Registration
 RDPMux takes the well-known name `org.RDP.RDPMux` on the system bus, and exposes a method `Register` under the object `/org/RDPMux/Server`. 
 
-Services that wish to expose a backend to the RDPMux server should call `Register` with an integer value between 0 and INT_MAX. RDPMux uses this number as your VM's ID internally. In return, the caller will receive a path to the private nanomsg socket that should be used for communicating updates back and forth between the RDP server and the VM. 
+Services that wish to expose a backend to the RDPMux server should call `Register` with an integer value between 0 and `INT_MAX`. RDPMux uses this number as your VM's ID internally to prevent issues with duplicate UUIDs. In return, the caller will receive a path to the private ZeroMQ socket that should be used for IPC.
 
-librdpmux implements this flow as part of its exposed API, in case you don't want to do it yourself.
+librdpmux abstracts this flow as part of its exposed API, in case you don't want to do it yourself.
 
 ### Normal VM communication
 Messages can be one of the following types:
@@ -97,19 +100,20 @@ enum message_type {
     DISPLAY_SWITCH,
     MOUSE,
     KEYBOARD,
-    DISPLAY_UPDATE_COMPLETE
+    DISPLAY_UPDATE_COMPLETE,
+    SHUTDOWN
 };
 ```
 
 #### General message flow
 
-After a VM is registered using the DBus endpoint discussed above, two things have happened: an RDP server has been created and is listening for client connections, and a private socket has been created for communication between RDPMux and the backend service. 
+After a VM is registered using the DBus endpoint discussed above, two things have happened: an RDP server has been created and is listening for client connections, and a private socket has been created for communication between RDPMux and the backend. 
 
-The VM/hypervisor should connect to this socket and begin listening for messages on it. Nanomsg sockets are full duplex, so messages should also be sent using this socket.
+The backend should connect to this socket and begin listening for messages on it. ZeroMQ sockets are full duplex, so messages should also be sent using this socket.
 
 Messages are encoded as Messagepack arrays of ints over the wire. The first element of the array is always going to be the type of message, and then the rest of the elements in the array will be specific to the message type. More about that below.
 
-In general, MOUSE and KEYBOARD messages are usually sent _from_ the RDPMux server (passed on from the RDP client) _to_ the hypervisor. DISPLAY_UPDATE, DISPLAY_SWITCH, and DISPLAY_UPDATE_COMPLETE messages are sent _from_ the hypervisor _to_ the RDPMux server for handling and communication to the RDP clients connected to that VM's RDP frontend. 
+In general, MOUSE and KEYBOARD messages are usually sent _from_ the RDPMux server (passed on from the RDP client) _to_ the backend. DISPLAY_REFRESH, DISPLAY_SWITCH, and DISPLAY_UPDATE_COMPLETE messages are sent _from_ the backend _to_ the RDPMux server for handling and communication to the RDP clients connected to that VM's RDP frontend. 
 
 #### DISPLAY_UPDATE
 
@@ -119,19 +123,19 @@ typedef struct display_update {
     /**
      * @brief X-coordinate of top left corner of region
      */
-    int x;
+    int x1;
     /**
      * @brief Y-coordinate of top left corner of region
      */
-    int y;
+    int y1;
     /**
-     * @brief width of region
+     * @brief X-coordinate of bottom right corner of region
      */
-    int w;
+    int x2;
     /**
-     * @brief height of region
+     * @brief X-coordinate of bottom right corner of region
      */
-    int h;
+    int y2;
 } display_update;
 ```
 
@@ -203,13 +207,18 @@ This update is meant to aid in the synchronization of the display buffer between
 
 To prevent this, we use DISPLAY_UPDATE_COMPLETE messages to communicate that RDPMux has finished copying out framebuffer information. The intention is that after sending a DISPLAY_UPDATE message, the hypervisor should not attempt to write to the framebuffer until it has received this message.
 
-It has one field:
+This message also contains the new target framerate for the backend for the purposes of adaptive framerate synchronization. This field can be ignored by the backend if it doesn't wish to support adaptive framerate synch.
+
 ```C
 typedef struct update_ack {
     /**
      * @brief whether the update succeeded.
      */
     bool success;
+    /**
+     * @brief new target framerate for the guest.
+     */
+    uint32_t framerate;
 } update_ack;
 ```
 
@@ -218,10 +227,6 @@ typedef struct update_ack {
 **Why didn't you build this into QEMU/Xen/another hypervisor?**
 
 That was the original plan. However, this library was developed in concert with [RDPMux](https://github.com/datto/rdpmux), and the decision was made to split this out into a library so that we could ship updates to our software without being tied to upstream's release cadence. SPICE actually ships their server implementation in the same way for similar reasons, so this is not without precedent.
-
-**Why are you using Nanomsg? That project seems to be abandoned!**
-
-Well, possibly. The situation with Nanomsg is still up in the air. As it stands, we don't use Nanomsg for very much more than a small full-duplex socket library anyway, so it's a fairly minimal concern to us if it's unsupported, and the functionality it provides can be easily duplicated if necessary.
 
 **I want more documentation than just this!**
 

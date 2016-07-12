@@ -478,6 +478,9 @@ static void mux_init_queue(MuxMsgQueue *q)
  * @func This function initializes the data structures used by the library. It also returns a pointer to the ShimDisplay
  * struct initialized, which is defined as an opaque type in the public header so that client code can't mess with it.
  *
+ * You must pass a string containing an UUID into the VM. This UUID will be used to uniquely identify the VM with the
+ * frontend server, and will be passed in every message.
+ *
  * @param uuid A UUID describing the VM.
  */
 __PUBLIC MuxDisplay *mux_init_display_struct(const char *uuid)
@@ -539,6 +542,6 @@ __PUBLIC void mux_cleanup(MuxDisplay *d)
     display->stop = true;
     pthread_mutex_unlock(&display->stop_lock);
 
-//    // clean up uuid
-//    g_free(&display->uuid);
+    // clean up uuid
+    g_free(&display->uuid);
 }
